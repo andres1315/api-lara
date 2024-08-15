@@ -10,6 +10,8 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+    // La tabla asociada al modelo
+    protected $table = 'segur';
 
     /**
      * The attributes that are mass assignable.

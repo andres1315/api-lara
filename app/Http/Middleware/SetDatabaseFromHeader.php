@@ -20,7 +20,7 @@ class SetDatabaseFromHeader
         $encryptedDbConfig = $request->header('DB-CONFIG');
 
         if (!$encryptedDbConfig) {
-            return response()->json(['error' => 'Database configuration is required'], 400);
+            return response()->json(['error' => 'Database configuration is required','db'=>$encryptedDbConfig], 400);
         }
 
         try {
@@ -38,7 +38,8 @@ class SetDatabaseFromHeader
 
             DB::setDefaultConnection('client');
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Invalid database configuration'], 400);
+            $message = $e->getMessage();
+            return response()->json(['error' => 'Invalid database configuration','message'=>$message], 400);
         }
 
         return $next($request);
