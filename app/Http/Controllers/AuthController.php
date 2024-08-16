@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-  /**
-   * Display a listing of the resource.
-   */
-
   public function conf(Request $request)
   {
     // Si la autenticación es exitosa, devuelve un token con la configuración de la base de datos
@@ -20,22 +16,38 @@ class AuthController extends Controller
 
     return response()->json([
       'token' => "Auth::user()->createToken('API Token')->plainTextToken",
-      'success' =>true,
+      'success' => true,
       'db_config' => $dbConfig // Devuelve la configuración de la base de datos encriptada
     ]);
   }
 
- public function login(Request $request){
-  $credentials = $request->only('user','password');
+  public function login(Request $request)
+  {
+    $credentials = [
+      'usuarioid' => $request->input('user'),
+      'password' => $request->input('password')
+    ];
 
-  try {
-    if (!$token = JWTAuth::attempt($credentials)) {
-        return response()->json(['message' => 'Unauthorized', 'success' => 'false'], 401);
+    $user = User::where('usuarioid', $credentials['usuarioid'])->first();
+
+    if (!$user || !$user->validateForPassportPasswordGrant($credentials['password'])) {
+      return response()->json(['message' => 'Unauthorized', 'success' => false, 'data' => $user], 401);
     }
-  } catch (JWTException $e) {
-      return response()->json(['message' => 'Could not create token', 'success' => 'false'], 500);
-  }
 
-  return response()->json(compact('token'));
- }
+
+    try {
+      if (!$token = JWTAuth::fromUser($user)) {
+        return response()->json(['message' => 'Unauthorized', 'success' => false], 401);
+      }
+    } catch (JWTException $e) {
+      return response()->json(['message' => 'Could not create token' . $e, 'success' => 'false'], 500);
+    }
+    $userData = ['id' => $user->usuarioId, 'name' => $user->nombre, 'document' => $user->cedula];
+    return response()->json([
+      'token' => $token,
+      'message' => '',
+      'success' => true,
+      'user' => $userData
+    ]);
+  }
 }

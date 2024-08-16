@@ -6,8 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
     // La tabla asociada al modelo
@@ -19,9 +20,9 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'nombre',
+        'usuarioid',
+        'clave',
     ];
 
     /**
@@ -46,4 +47,46 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getJWTIdentifier()
+    {
+        // Si la clave primaria es 'usuarioid'
+        return (string) $this->usuarioid;
+    }
+
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     *
+     * @return array
+     */
+
+    public function getJWTCustomClaims()
+    {
+        return [
+            'usuarioid' => $this->usuarioId,
+            'name' => $this->nombre,
+            'document' => $this->cedula,
+            // Agrega aquí otros datos que quieras incluir en el token
+        ];
+    }
+
+    /**
+     * Sobrescribir el método getAuthIdentifierName para usar 'usuarioid'
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'usuarioid';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->clave;
+    }
+
+    public function validateForPassportPasswordGrant($password){
+
+        return strtoupper(md5($password)) === $this->clave;
+    }
+
+    
 }
