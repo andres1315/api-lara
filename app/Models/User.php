@@ -13,16 +13,21 @@ class User extends Authenticatable implements JWTSubject
     use HasFactory, Notifiable;
     // La tabla asociada al modelo
     protected $table = 'segur';
-
+    protected $primaryKey = 'usuarioId';
+    protected $keyType = 'string';
+    public $incrementing = false;
+    public $timestamps = false;
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'nombre',
         'usuarioid',
-        'clave',
+        'nombre',
+        'estado',
+        'perfilid',
+        'cedula',
     ];
 
     /**
@@ -31,8 +36,9 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'clave',
+        'superclave'
+
     ];
 
     /**
@@ -51,6 +57,7 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTIdentifier()
     {
         // Si la clave primaria es 'usuarioid'
+        //$this->getKey()
         return (string) $this->usuarioid;
     }
 
@@ -88,5 +95,25 @@ class User extends Authenticatable implements JWTSubject
         return strtoupper(md5($password)) === $this->clave;
     }
 
-    
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+
+        $serializeData =[
+            'id'                => $array['usuarioId'],
+            'name'              => $array['nombre'],
+            'state'             => $array['estado'],
+            'profileId'         => $array['perfilId'],
+            'document'          => $array['cedula'],
+            'warehouseId'       => $array['AlmacenId'],
+            'consultOtherStore' => $array['ConsultaOtrosAlmacenes'],
+            'showPrice'         => $array['MostrarPrecio'],
+
+        ];
+
+        return $serializeData;
+    }
+
+
 }

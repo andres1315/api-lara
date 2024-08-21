@@ -44,13 +44,13 @@ class SetClientDatabase
             ->where('C.Nit', $nit)
             ->where('C.Estado', 'A')
             ->where('A.Estado', 'A')
-            ->where('M.ModuloId', 'DESPACHO_FIVE')
-            ->where('A.AplicativoId', 'DESPACHO_FIVE')
+            ->where('M.ModuloId', 'WEBCLUB')
+            ->where('A.AplicativoId', 'WEBCLUB')
             ->where('AC.Estado', 'A')
             ->first();
 
             if (!$client) {
-                return response()->json(['message' => 'El numero ingresado no coincide con los registrados en el sistema o se encuentra en estado Inactiva.','success'=>'false'], 400);
+                return response()->json(['message' => 'El numero ingresado no coincide con los registrados en el sistema o se encuentra en estado Inactiva.','success'=>'false','data'=>$nit], 400);
             }
 
             config()->set('database.connections.client', [

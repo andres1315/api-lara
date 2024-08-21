@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckJwtValid;
 use App\Http\Middleware\SetClientDatabase;
 use App\Http\Middleware\SetDatabaseFromHeader;
 use Illuminate\Foundation\Application;
@@ -15,24 +16,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then:function(){
             Route::middleware(['auth-custom'])
-            ->prefix('user')
+            ->prefix('/api/user')
             ->group(base_path('routes/user.php'));
 
             Route::get('/{any}', function () {
                 return response()->view('errors.404', [], 404);
             })->where('any', '.*');
-            
+
         }
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'databaseHeader' => SetDatabaseFromHeader::class,
             'setDatabase' => SetClientDatabase::class,
+            'check-jwt' =>CheckJwtValid::class,
         ]);
 
         $middleware->appendToGroup('auth-custom', [
             SetDatabaseFromHeader::class,
-           'auth:api',
+            CheckJwtValid::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -9,9 +10,11 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+    public function index(Request $request)
     {
-        //
+        $users = User::where('Estado','A')->where('nombre','!=','')->get();
+        return response()->json(['users'=>$users,'usersend'=>$request->get('user')]);
     }
 
     /**
@@ -19,7 +22,8 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $users = User::where('Estado','A')->where('nombre','!=','')->get();
+        return response()->json(['users'=>$users]);
     }
 
     /**
