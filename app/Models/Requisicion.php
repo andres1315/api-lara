@@ -4,15 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Requisicion extends Model{
   use HasFactory;
 
-  protected $table = 'HeadRequ';
-  protected $primaryKey = 'RequisicionId';
+  protected $table = 'Requisicion';
+  protected $primaryKey = 'Id';
   public $timestamps = false;
 
-
+  public function RequHead(): BelongsTo
+  {
+      return $this->BelongsTo(HeadRequ::class,'RequisicionId','RequisicionId');
+  }
   public function toArray(){
     $array = parent::toArray();
 
@@ -29,11 +33,11 @@ class Requisicion extends Model{
       'approvedDate'        => $array['FechaAprob'],
       'userAprrovedId'      => $array['AprobadorId'],
       'received'            => $array['Recibidos'],
-      'noPending'           => $array['NoPendientes'],
-      'observationProduct'  => $array['ObserProdu'],
+      'noPending'           => $array['NoPendiente'],
+      'observationProduct'  => trim($array['ObserProdu']),
       'productRequest'      => $array['ProduSolic'],
       'qtyRequest'          => $array['CantiSolic'],
-      'typeEndId'           => $array['TipoFinzalizaacionId'],
+      'typeEndId'           => $array['TipoFinalizacionId'],
       'presentationId'      => $array['PresentacionId'],
       'factor'              => $array['Factor'],
       'deliveryDate'        => $array['FechaEntrega'],
