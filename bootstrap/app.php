@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ->prefix('/api/user')
             ->group(base_path('routes/user.php'));
 
+            Route::middleware(['auth-custom'])
+            ->prefix('/api/requ')
+            ->group(base_path('routes/requisitions.php'));
+
             Route::match(['get', 'post', 'put', 'delete'], '/{any}', function () {
                 return response()->view('errors.404', [], 404);
             })->where('any', '.*');

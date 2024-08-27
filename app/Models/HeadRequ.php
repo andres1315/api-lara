@@ -29,7 +29,7 @@ class HeadRequ extends Model{
       'warehouseId'   => $array['BodegaId'],
       'approvalDate'  => $array['FechaAprobacion'],
       'approved'      => $array['Aprobada'],
-      'incidenceId'   => $array['incidenciaId'],
+      'incidenceId'   => $array['IncidenciaId'],
       'special'       => $array['Especial'],
       'priority'      => $array['Prioridad'],
 

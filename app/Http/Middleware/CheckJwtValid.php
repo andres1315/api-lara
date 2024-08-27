@@ -19,8 +19,8 @@ class CheckJwtValid
     {
         try {
             // Verifica si el token está presente
-            $user =JWTAuth::parseToken()->authenticate();
-            $request->merge(['user' => $user]);
+            $user =JWTAuth::parseToken();
+            $request->merge(['userAuth' => $user->getPayload()->get()]);
         } catch (JWTException $e) {
             if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException){
                 return response()->json(['error' => 'invalid-token'],401);
