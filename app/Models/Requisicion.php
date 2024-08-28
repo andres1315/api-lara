@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Requisicion extends Model{
+class Requisicion extends Model
+{
   use HasFactory;
 
   protected $table = 'Requisicion';
@@ -15,9 +17,16 @@ class Requisicion extends Model{
 
   public function RequHead(): BelongsTo
   {
-      return $this->BelongsTo(HeadRequ::class,'RequisicionId','RequisicionId');
+    return $this->BelongsTo(HeadRequ::class, 'RequisicionId', 'RequisicionId');
   }
-  public function toArray(){
+
+  public function product(): HasOne
+  {
+    return $this->HasOne(Producto::class, 'productoid', 'ProductoId');
+
+  }
+  public function toArray()
+  {
     $array = parent::toArray();
 
 
@@ -46,6 +55,7 @@ class Requisicion extends Model{
       'storeOCId'           => $array['AlmacenIdOC'],
       'purchaseOrder'       => $array['OrdenCompr'],
       'incidencePId'        => $array['IncidenciaIdP'],
+      'productDetail'       => $this->product
 
     ];
 

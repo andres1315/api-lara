@@ -10,8 +10,8 @@ class RequisicionController extends Controller
     //
     public function index(Request $request)
     {
-        $users = HeadRequ::where('Estado','!=','NU')->get();
+        $users = HeadRequ::where('Estado','!=','NU')->orderBy('Prioridad','asc')->get();
 
-        return response()->json(['users'=>$users,'userAuth'=>$request->get('userAuth')]);
+        return response()->json(['requisition'=>$users,'userAuth'=>$request->get('userAuth')]);
     }
 }
