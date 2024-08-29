@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,6 +40,18 @@ class HeadRequ extends Model
     return $this->HasOne(Dependencia::class, 'DependenciaId', 'DependenciaId');
   }
 
+  public function dispatchLog(): HasOne
+  {
+    return $this->HasOne(DespachoLog::class, 'RequisicionId', 'RequisicionId');
+  }
+
+
+  public function scopeApprovedAndAssigned(Builder $query)
+  {
+      /* $query->where('votes', '>', 100); */
+      return $query->join('Requisicion', 'HeadRequ.RequisicionId', '=', 'Requisicion.RequisicionId')
+      ->select('HeadRequ.*', 'Requisicion.*')->where('HeadRequ.Estado','!=','NU')->where('HeadRequ.Aprobada','S');
+  }
 
   public function toArray()
   {
@@ -51,25 +64,26 @@ class HeadRequ extends Model
     ];
 
     $serializeData = [
-      'id' => $array['RequisicionId'],
-      'consecutive' => $array['ConseRequi'],
-      'type' => $array['Tipo'],
-      'date' => $array['Fecha'],
-      'digitDate' => $array['FechaDigit'],
-      'storeId' => $array['AlmacenId'],
-      'userRequestId' => $array['SolicitanteId'],
-      'dependencyId' => $array['DependenciaId'],
-      'warehouseId' => $array['BodegaId'],
-      'approvalDate' => $array['FechaAprobacion'],
-      'approved' => $array['Aprobada'],
-      'incidenceId' => $array['IncidenciaId'],
-      'special' => $array['Especial'],
-      'priority' => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
-      'detailRQ' => $this->requDetail,
-      'userRequest' => $this->userRequest,
-      'store' => $this->store,
-      'dependency' => $this->dependency,
-      'warehouse' => $this->warehouse,
+      'id'                  => $array['RequisicionId'],
+      'consecutive'         => $array['ConseRequi'],
+      'type'                => $array['Tipo'],
+      'date'                => $array['Fecha'],
+      'digitDate'           => $array['FechaDigit'],
+      'storeId'             => $array['AlmacenId'],
+      'userRequestId'       => $array['SolicitanteId'],
+      'dependencyId'        => $array['DependenciaId'],
+      'warehouseId'         => $array['BodegaId'],
+      'approvalDate'        => $array['FechaAprobacion'],
+      'approved'            => $array['Aprobada'],
+      'incidenceId'         => $array['IncidenciaId'],
+      'special'             => $array['Especial'],
+      'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
+      'detailRQ'            => $this->requDetail,
+      'userRequest'         => $this->userRequest,
+      'store'               => $this->store,
+      'dependency'          => $this->dependency,
+      'warehouse'           => $this->warehouse,
+      'dispatchLog'         => $this->dispatchLog
     ];
 
     return $serializeData;
