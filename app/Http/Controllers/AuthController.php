@@ -23,11 +23,11 @@ class AuthController extends Controller
   public function login(Request $request)
   {
     $credentials = [
-      'usuarioid' => strval($request->input('user')),
+      'user' => strval($request->input('user')),
       'password' => strval($request->input('password'))
     ];
 
-    $user = User::where('usuarioid', $credentials['usuarioid'])->where('estado','A')->first();
+    $user = User::where('terceroid', $credentials['user'])->where('estado','A')->first();
 
     if (!$user || !$user->validateForPassportPasswordGrant($credentials['password'])) {
       return response()->json(['message' => 'Usuario o Contraseña Incorrecta', 'success' => false, 'data' => $user], 401);

@@ -22,7 +22,7 @@ class HeadRequ extends Model
   }
   public function userRequest(): HasOne
   {
-    return $this->HasOne(User::class, 'usuarioId', 'SolicitanteId');
+    return $this->HasOne(Segur::class, 'usuarioId', 'SolicitanteId');
   }
 
   public function store(): HasOne

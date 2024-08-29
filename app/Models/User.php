@@ -4,18 +4,19 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use PhpParser\Node\Expr\Cast\Object_;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
   use HasFactory, Notifiable;
   // La tabla asociada al modelo
-  protected $table = 'segur';
-  protected $primaryKey = 'usuarioId';
-  protected $keyType = 'string';
-  public $incrementing = false;
+  protected $table = 'operario';
+  protected $primaryKey = 'OperarioId';
+
   public $timestamps = false;
   /**
    * The attributes that are mass assignable.
@@ -23,11 +24,9 @@ class User extends Authenticatable implements JWTSubject
    * @var array<int, string>
    */
   protected $fillable = [
-    'usuarioid',
-    'nombre',
-    'estado',
-    'perfilid',
-    'cedula',
+    'TerceroId',
+    'ValorHora',
+    'Estado',
   ];
 
   /**
@@ -36,9 +35,7 @@ class User extends Authenticatable implements JWTSubject
    * @var array<int, string>
    */
   protected $hidden = [
-    'clave',
-    'superclave'
-
+    'Clave',
   ];
 
   /**
@@ -56,9 +53,9 @@ class User extends Authenticatable implements JWTSubject
 
   public function getJWTIdentifier()
   {
-    // Si la clave primaria es 'usuarioid'
+    // Si la clave primaria es 'OperarioId'
     //$this->getKey()
-    return (string) $this->usuarioid;
+    return (string) $this->OperarioId;
   }
 
   /**
@@ -70,47 +67,56 @@ class User extends Authenticatable implements JWTSubject
   public function getJWTCustomClaims()
   {
     return [
-      'usuarioid' => $this->usuarioId,
+      'operarioid' => $this->OperarioId,
       'name' => $this->nombre,
-      'document' => $this->cedula,
-      // Agrega aquí otros datos que quieras incluir en el token
+      'document' => $this->TerceroId,
+
+      // Agregar aquí otros datos que se quieran incluir en el token
     ];
   }
 
   /**
-   * Sobrescribir el método getAuthIdentifierName para usar 'usuarioid'
+   * Sobrescribir el método getAuthIdentifierName para usar 'operarioid'
    */
   public function getAuthIdentifierName()
   {
-    return 'usuarioid';
+    return 'operarioid';
   }
 
   public function getAuthPassword()
   {
-    return $this->clave;
+    return $this->Clave;
   }
 
   public function validateForPassportPasswordGrant($password)
   {
 
-    return strtoupper(md5($password)) === $this->clave;
+    return strtoupper(md5($password)) === $this->Clave;
+  }
+
+  public function thirdData(): HasOne
+  {
+    return $this->HasOne(Tercero::class, 'TerceroID', 'TerceroId');
   }
 
   public function toArray()
   {
     $array = parent::toArray();
-
+    $dataThird = $this->thirdData;
 
     $serializeData = [
-      'id'                => $array['usuarioId'],
-      'name'              => $array['nombre'],
-      'state'             => $array['estado'],
-      'profileId'         => $array['perfilId'],
-      'document'          => $array['cedula'],
-      'warehouseId'       => $array['AlmacenId'],
-      'consultOtherStore' => $array['ConsultaOtrosAlmacenes'],
-      'showPrice'         => $array['MostrarPrecio'],
-
+      'id'              => $array['OperarioId'],
+      'thirdId'         => $array['TerceroId'],
+      'state'           => $array['Estado'],
+      'type'            => $array['Tipo'],
+      'warehouseId'     => $array['AlmacenId'],
+      'name'            => $dataThird->nombre,
+      'photo'           => $dataThird->foto,
+      'typeDocument'    => $dataThird->tipodocuid,
+      'cityId'          => $dataThird->ciudadid,
+      'phone'           => $dataThird->telefono,
+      'cellPhone'       => $dataThird->celular,
+      'email'       => $dataThird->email,
     ];
 
     return $serializeData;
