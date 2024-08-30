@@ -14,7 +14,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $users = User::where('Estado','A')->where('nombre','!=','')->get();
-        return response()->json(['users'=>$users,'usersend'=>$request->get('user')]);
+        return response()->json(['users'=>$users,'userAuth'=>$request->get('userAuth')]);
     }
 
     /**
@@ -22,8 +22,8 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $users = User::where('Estado','A')->where('nombre','!=','')->get();
-        return response()->json(['users'=>$users]);
+       /*  $users = User::where('Estado','A')->where('nombre','!=','')->get();
+        return response()->json(['users'=>$users]); */
     }
 
     /**
