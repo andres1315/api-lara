@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,16 +14,37 @@ class Producto extends Model
 
 
   public $timestamps = false;
+  protected static $relationsToInclude = [];
+
+  public function ubicaciones()
+  {
+    return $this->hasMany(InveUbicacion::class, 'ProductoId', 'productoid');
+  }
+
+  public function ubicacionSugerida()
+  {
+    return $this->hasOne(InveUbicacion::class, 'ProductoId', 'productoid')->with(['primeraBandeja']);
+    /*   ->join('UbicacionBandeja', 'InveUbicacion.BandejaId', '=', 'UbicacionBandeja.BandejaId')
+      ->orderBy('UbicacionBandeja.barras', 'desc')
+      ->select('InveUbicacion.*'); */
+  }
+
+  public static function scopeWithUbicacionSugerida(Builder $query)
+  {
+      $relations = ['ubicacionSugerida'];
+      static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
+      return $query->with($relations);
+  }
 
 
-  public function toArray()
+  public function toArray($withRelations = false)
   {
     $array = parent::toArray();
 
     $serializeData = [
       'id'              => $array['id'],
       'headId'          => $array['headprodid'],
-      'productid'       => $array['productoid'],
+      'productId'       => $array['productoid'],
       'reference'       => $array['referencia'],
       'name'            => $array['nombre'],
       'type'            => $array['Tipo'],
@@ -37,6 +59,13 @@ class Producto extends Model
       'cost'            => $array['costo'],
       'averageCost'     => $array['costoprome'],
     ];
+    
+      foreach (static::$relationsToInclude as $relation) {
+          if ($this->relationLoaded($relation)) {
+              $serializeData[$relation] = $this->$relation;
+          }
+      }
+  
 
     return $serializeData;
   }

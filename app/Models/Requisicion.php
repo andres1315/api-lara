@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,19 @@ class Requisicion extends Model
     return $this->HasOne(Producto::class, 'productoid', 'ProductoId');
 
   }
+
+  public function scopeWithProductLocations(Builder $query, $includeLocations = false)
+{
+    $query->when($includeLocations, function ($query) {
+        $query->with(['product' => function ($query) {
+            $query->withUbicacionSugerida();
+        }]);
+    });
+
+    return $query;
+}
+
+
   public function toArray()
   {
     $array = parent::toArray();

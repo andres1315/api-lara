@@ -15,6 +15,7 @@ class HeadRequ extends Model
   protected $primaryKey = 'RequisicionId';
 
   public $timestamps = false;
+  protected static $relationsToInclude = [];
 
 
   public function requDetail(): HasMany
@@ -48,12 +49,32 @@ class HeadRequ extends Model
 
   public function scopeApprovedAndAssigned(Builder $query)
   {
-      /* $query->where('votes', '>', 100); */
-      return $query->join('Requisicion', 'HeadRequ.RequisicionId', '=', 'Requisicion.RequisicionId')
-      ->select('HeadRequ.*', 'Requisicion.*')->where('HeadRequ.Estado','!=','NU')->where('HeadRequ.Aprobada','S');
+    $query->where('Estado', '!=', 'NU')->where('Aprobada','S');
+    
   }
 
-  public function toArray()
+
+  public function scopeWithRelationLocationInventory(Builder $query){
+    $relations = ['userRequest', 'store', 'warehouse', 'dependency', 'dispatchLog'];
+    static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
+    return $query->with($relations);
+  }
+
+  public function scopeWithRelations(Builder $query)
+  {
+    $relations = ['userRequest', 'store', 'warehouse', 'dependency', 'dispatchLog'];
+    static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
+    return $query->with($relations);
+  }
+
+  public function scopeWithDetailRequisition(Builder $query){
+    $relations = ['requDetail'];
+    static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
+    return $query->with($relations);
+  }
+
+
+  public function toArray($withRelations=false)
   {
     $array = parent::toArray();
 
@@ -77,14 +98,19 @@ class HeadRequ extends Model
       'approved'            => $array['Aprobada'],
       'incidenceId'         => $array['IncidenciaId'],
       'special'             => $array['Especial'],
+      'relation'            => static::$relationsToInclude,
       'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
-      'detailRQ'            => $this->requDetail,
-      'userRequest'         => $this->userRequest,
-      'store'               => $this->store,
-      'dependency'          => $this->dependency,
-      'warehouse'           => $this->warehouse,
-      'dispatchLog'         => $this->dispatchLog
     ];
+
+    if ($withRelations) {
+      $serializeData["entryHere"] = $withRelations;
+      foreach (static::$relationsToInclude as $relation) {
+        if ($this->relationLoaded($relation)) {
+          $serializeData[$relation] = $this->$relation;
+        }
+      }
+    }
+
 
     return $serializeData;
   }
