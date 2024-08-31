@@ -31,7 +31,7 @@ class Requisicion extends Model
 {
     $query->when($includeLocations, function ($query) {
         $query->with(['product' => function ($query) {
-            $query->withUbicacionSugerida();
+            $query->withSuggestedLocation();
         }]);
     });
 

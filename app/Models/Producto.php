@@ -21,17 +21,17 @@ class Producto extends Model
     return $this->hasMany(InveUbicacion::class, 'ProductoId', 'productoid');
   }
 
-  public function ubicacionSugerida()
+  public function suggestedLocation()
   {
-    return $this->hasOne(InveUbicacion::class, 'ProductoId', 'productoid')->with(['primeraBandeja']);
+    return $this->HasMany(InveUbicacion::class, 'ProductoId', 'productoid')->with(['suggestTray']);
     /*   ->join('UbicacionBandeja', 'InveUbicacion.BandejaId', '=', 'UbicacionBandeja.BandejaId')
       ->orderBy('UbicacionBandeja.barras', 'desc')
       ->select('InveUbicacion.*'); */
   }
 
-  public static function scopeWithUbicacionSugerida(Builder $query)
+  public static function scopeWithSuggestedLocation(Builder $query)
   {
-      $relations = ['ubicacionSugerida'];
+      $relations = ['suggestedLocation'];
       static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
       return $query->with($relations);
   }

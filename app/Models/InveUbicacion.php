@@ -13,14 +13,18 @@ class InveUbicacion extends Model
     protected $primaryKey = 'Id';
 
     public $timestamps = false;
+    protected static $relationsToInclude = [];
 
-    public function bandejas()
+
+    public function trays()
     {
         return $this->hasMany(UbicacionBandeja::class, 'BandejaId', 'BandejaId');
     }
 
-    public function primeraBandeja()
+    public function suggestTray()
     {
+        $relations = ['suggestTray'];
+        static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
         return $this->hasOne(UbicacionBandeja::class, 'BandejaId', 'BandejaId')
             ->orderByDesc('barras');
     }
@@ -34,7 +38,7 @@ class InveUbicacion extends Model
             'productId'           => $array['ProductoId'],
             'lotProductId'        => $array['LoteProductoId'],
             'currentInventory'    => $array['InvenActua'],
-            'primeraBandeja'      => $this->primeraBandeja
+            'suggestTray'         => $this->suggestTray
 
         ];
 

@@ -98,7 +98,6 @@ class HeadRequ extends Model
       'approved'            => $array['Aprobada'],
       'incidenceId'         => $array['IncidenciaId'],
       'special'             => $array['Especial'],
-      'relation'            => static::$relationsToInclude,
       'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
     ];
 

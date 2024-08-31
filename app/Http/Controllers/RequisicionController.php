@@ -29,7 +29,7 @@ class RequisicionController extends Controller
             ->where('RequisicionId', $id)
             ->with(['requDetail' => function ($query) {
                     $query->with(['product' => function ($query) {
-                        $query->withUbicacionSugerida();
+                        $query->withSuggestedLocation();
                     }]);
                 }])
             ->orderBy('Prioridad', 'asc')
