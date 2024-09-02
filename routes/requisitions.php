@@ -8,3 +8,4 @@ Route::get('/', [RequisicionController::class, 'index'])->name('all-requisition'
 Route::get('/{id}', [RequisicionController::class, 'show'])->name('detail-requisition');  // Lista detalle RQ
 
 
+

@@ -18,6 +18,8 @@ class InveUbicacion extends Model
 
     public function trays()
     {
+        $relations = ['trays'];
+        static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
         return $this->hasMany(UbicacionBandeja::class, 'BandejaId', 'BandejaId');
     }
 
@@ -33,14 +35,18 @@ class InveUbicacion extends Model
     {
         $array = parent::toArray();
         $serializeData = [
-            'id'                  => $array['Id'],
-            'warehouseId'         => $array['BandejaId'],
-            'productId'           => $array['ProductoId'],
-            'lotProductId'        => $array['LoteProductoId'],
-            'currentInventory'    => $array['InvenActua'],
-            'suggestTray'         => $this->suggestTray
+            'id'                  => @$array['Id'],
+            'warehouseId'         => @$array['BandejaId'],
+            'productId'           => @$array['ProductoId'],
+            'lotProductId'        => @$array['LoteProductoId'],
+            'currentInventory'    => @$array['InvenActua'],
 
         ];
+        foreach (static::$relationsToInclude as $relation) {
+            if ($this->relationLoaded($relation)) {
+                $serializeData[$relation] = $this->$relation;
+            }
+        }
 
         return $serializeData;
     }
