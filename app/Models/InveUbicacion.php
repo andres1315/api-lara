@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,15 +21,18 @@ class InveUbicacion extends Model
     {
         $relations = ['trays'];
         static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
-        return $this->hasMany(UbicacionBandeja::class, 'BandejaId', 'BandejaId');
+        return $this->hasOne(UbicacionBandeja::class, 'BandejaId', 'BandejaId');
     }
 
     public function suggestTray()
     {
         $relations = ['suggestTray'];
         static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
-        return $this->hasOne(UbicacionBandeja::class, 'BandejaId', 'BandejaId')
-            ->orderByDesc('barras');
+        return $this->hasOne(UbicacionBandeja::class, 'BandejaId', 'BandejaId');
+    }
+
+    public function scopeFilterTrayAndProduct(Builder $query, $product,$tray){
+        return $query->where('BandejaId',$tray)->where('ProductoId',$product);
     }
 
     public function toArray()

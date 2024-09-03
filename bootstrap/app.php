@@ -27,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ->prefix('/api/products')
             ->group(base_path('routes/products.php'));
 
+            Route::middleware(['auth-custom'])
+            ->prefix('/api/invlocation')
+            ->group(base_path('routes/inventoryLocation.php'));
+
             Route::match(['get', 'post', 'put', 'delete'], '/{any}', function () {
                 return response()->view('errors.404', [], 404);
             })->where('any', '.*');

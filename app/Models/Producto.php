@@ -25,10 +25,7 @@ class Producto extends Model
 
   public function suggestedLocation()
   {
-    return $this->HasOne(InveUbicacion::class, 'ProductoId', 'productoid')->with(['suggestTray']);
-    /*   ->join('UbicacionBandeja', 'InveUbicacion.BandejaId', '=', 'UbicacionBandeja.BandejaId')
-      ->orderBy('UbicacionBandeja.barras', 'desc')
-      ->select('InveUbicacion.*'); */
+    return $this->HasOne(InveUbicacion::class, 'ProductoId', 'productoid')->with(['trays']);
   }
 
   public static function scopeWithAllLocation(Builder $query)
@@ -42,9 +39,7 @@ class Producto extends Model
   {
       $relations = ['suggestedLocation'];
       static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
-      return $query->with(['suggestedLocation'=>function($query){
-        $query->with(['suggestTray']);
-      }]);
+      return $query->with(['suggestedLocation']);
   }
 
 

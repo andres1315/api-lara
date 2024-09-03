@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,12 +14,16 @@ class UbicacionBandeja extends Model
 
     public $timestamps = false;
 
+    public function scopeIsActive(Builder $query){
+        return $query->where('Estado', 'A');
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
         $serializeData = [
             'id'                  => $array['BandejaId'],
-            'warehouseId'         => $array['MuebleId'],
+            'furnitureid'         => $array['MuebleId'],
             'description'         => $array['Descripcion'],
             'state'               => $array['Estado'],
             'blockInventorySell'  => $array['BloqueaInventarioVentas'],
