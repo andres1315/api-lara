@@ -10,6 +10,7 @@ class VerificaDespachoLog extends Model
     use HasFactory;
     protected $table = 'VerificaDespachoLog';
     protected $primaryKey = 'Id';
+    protected $fillable = ['DespachoLogId', 'ProductoId', 'Cantidad','Fecha','LoteProductoId','PresentacionId','Factor'];
     public $timestamps = false;
 
 
@@ -18,14 +19,14 @@ class VerificaDespachoLog extends Model
     $array = parent::toArray();
 
     $serializeData = [
-      'id'                      => $array['VerificaDespachoLogId'],
-      'movementId'              => $array['DespachoLogId'],
-      'billId'                  => $array['ProductoId'],
-      'date'                    => $array['Cantidad'],
-      'state'                   => $array['Fecha'],
-      'startDatePicking'        => $array['LoteProductoId'],
-      'endDatePicking'          => $array['PresentacionId'],
-      'operatorIdPicking'       => $array['Factor'],
+      'id'                  => $array['VerificaDespachoLogId'],
+      'dispatchLogId'       => $array['DespachoLogId'],
+      'productId'           => $array['ProductoId'],
+      'qty'                 => $array['Cantidad'],
+      'date'                => $array['Fecha'],
+      'loteProduct'         => $array['LoteProductoId'],
+      'presentationId'      => $array['PresentacionId'],
+      'factor'              => $array['Factor'],
 
     ];
 

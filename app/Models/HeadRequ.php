@@ -44,11 +44,6 @@ class HeadRequ extends Model
   public function dispatchLog(): HasOne
   {
     return $this->HasOne(DespachoLog::class, 'RequisicionId', 'RequisicionId');
-    /* ->where('HeadRequ.Estado', '!=', 'NU')
-    ->where('HeadRequ.RequisicionId', $idRequisition)
-    ->where('HeadRequ.Aprobada','S')
-    ->where('DespachoLog.OperarioIdAli', $user_id)
-    ->where('DespachoLog.Estado', 'A'); */
   }
 
 
@@ -57,6 +52,8 @@ class HeadRequ extends Model
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
+   ->where('DespachoLog.OperarioIdAli',$user_id)
+   ->where('DespachoLog.Estado','A')
    ->select('HeadRequ.*')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
