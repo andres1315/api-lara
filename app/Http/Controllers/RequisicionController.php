@@ -11,9 +11,10 @@ class RequisicionController extends Controller
     //
     public function index(Request $request)
     {
-        $requisitions = HeadRequ::ApprovedAndAssigned()
-            ->withRelations()
-            ->orderBy('Prioridad', 'asc')->get();
+        $user = (object) $request->get('userAuth');
+
+        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)
+            ->withRelations()->get();
         $requisitionArray = $requisitions->map(function ($requisition) {
             return $requisition->toArray(true);
         });
@@ -23,16 +24,12 @@ class RequisicionController extends Controller
 
     public function show(string $id, Request $request)
     {
-        $requisition = HeadRequ::ApprovedAndAssigned()
+        $user = (object) $request->get('userAuth');
+        $requisition = HeadRequ::ApprovedAndAssigned($user->operarioid)
             ->withRelations()
             ->withDetailRequisition()
-            ->where('RequisicionId', $id)
-            ->with(['requDetail' => function ($query) {
-                    $query->with(['product' => function ($query) {
-                        $query->withSuggestedLocation();
-                    }]);
-                }])
-            ->orderBy('Prioridad', 'asc')
+            ->withDispatchLogDetail()
+            ->where('HeadRequ.RequisicionId', $id)
             ->firstOrFail();
         $requisitionArray = $requisition->toArray(true);
         return response()->json(['requisitionData' => $requisitionArray]);

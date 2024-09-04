@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DespachoLog extends Model
 {
@@ -11,6 +13,20 @@ class DespachoLog extends Model
     protected $table = 'DespachoLog';
     protected $primaryKey = 'Id';
     public $timestamps = false;
+
+
+
+    public function scopeAssignedEnlistment(Builder $query, $user_id)
+    {
+        $stateEnlistment ='A';
+        return $query->where('OperarioIdAli',$user_id)->where('Estado',$stateEnlistment);
+    }
+
+    public function verifyDispatchLog(): HasMany
+    {
+      return $this->HasMany(VerificaDespachoLog::class, 'DespachoLogId', 'Id');
+
+    }
 
 
     public function toArray()
@@ -21,7 +37,7 @@ class DespachoLog extends Model
       'id'                      => $array['Id'],
       'movementId'              => $array['MovimientoId'],
       'billId'                  => $array['FacturaId'],
-      'date'                    => $array['DechaRegis'],
+      'date'                    => $array['FechaRegis'],
       'state'                   => $array['Estado'],
       'startDatePicking'        => $array['AlistamientoInicio'],
       'endDatePicking'          => $array['AlistamientoFin'],
@@ -32,6 +48,7 @@ class DespachoLog extends Model
       'observation'             => $array['Observacion'],
       'requisitionId'           => $array['RequisicionId'],
       'priority'                => $array['Prioridad'],
+      'verifyDispatchLog'       => $this->verifyDispatchLog
 
     ];
 

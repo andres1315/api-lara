@@ -44,25 +44,41 @@ class HeadRequ extends Model
   public function dispatchLog(): HasOne
   {
     return $this->HasOne(DespachoLog::class, 'RequisicionId', 'RequisicionId');
+    /* ->where('HeadRequ.Estado', '!=', 'NU')
+    ->where('HeadRequ.RequisicionId', $idRequisition)
+    ->where('HeadRequ.Aprobada','S')
+    ->where('DespachoLog.OperarioIdAli', $user_id)
+    ->where('DespachoLog.Estado', 'A'); */
   }
 
 
-  public function scopeApprovedAndAssigned(Builder $query)
+  public function scopeApprovedAndAssigned(Builder $query,$user_id)
   {
-    $query->where('Estado', '!=', 'NU')->where('Aprobada','S');
-    
+   return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+   ->where('HeadRequ.Estado', '!=', 'NU')
+   ->where('HeadRequ.Aprobada','S')
+   ->select('HeadRequ.*')
+   ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
 
-  public function scopeWithRelationLocationInventory(Builder $query){
-    $relations = ['userRequest', 'store', 'warehouse', 'dependency', 'dispatchLog'];
+  public function scopeWithDispatchLog(Builder $query){
+
+
+    $relations = ['dispatchLog'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
+
+
+
   }
+
+
+
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', 'store', 'warehouse', 'dependency', 'dispatchLog'];
+    $relations = ['userRequest', 'store', 'warehouse', 'dependency'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -70,7 +86,33 @@ class HeadRequ extends Model
   public function scopeWithDetailRequisition(Builder $query){
     $relations = ['requDetail'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
-    return $query->with($relations);
+    return $query->with([
+        'requDetail' => function ($query) {
+            $query->with([
+                'product' => function ($query) {
+                    $query->withSuggestedLocation();
+                }
+            ]);
+        }
+    ]);
+  }
+
+
+  public function scopeWithDispatchLogDetail(Builder $query){
+
+
+    $relations = ['dispatchLog'];
+    static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
+    return $query->with([
+        'dispatchLog'=> function($query){
+            $query->with([
+                'verifyDispatchLog'
+            ]);
+        }
+    ]);
+
+
+
   }
 
 
