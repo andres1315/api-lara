@@ -87,7 +87,7 @@ class HeadRequ extends Model
         'requDetail' => function ($query) {
             $query->with([
                 'product' => function ($query) {
-                    $query->withSuggestedLocation();
+                    $query->withSuggestedLocation()->withPresentation();
                 }
             ]);
         }
@@ -113,7 +113,7 @@ class HeadRequ extends Model
   }
 
 
-  public function toArray($withRelations=false)
+  public function toArray()
   {
     $array = parent::toArray();
 
@@ -140,14 +140,13 @@ class HeadRequ extends Model
       'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
     ];
 
-    if ($withRelations) {
-      $serializeData["entryHere"] = $withRelations;
-      foreach (static::$relationsToInclude as $relation) {
-        if ($this->relationLoaded($relation)) {
-          $serializeData[$relation] = $this->$relation;
-        }
+
+    foreach (static::$relationsToInclude as $relation) {
+      if ($this->relationLoaded($relation)) {
+        $serializeData[$relation] = $this->$relation;
       }
     }
+    
 
 
     return $serializeData;

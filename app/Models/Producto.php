@@ -28,18 +28,29 @@ class Producto extends Model
     return $this->HasOne(InveUbicacion::class, 'ProductoId', 'productoid')->with(['trays']);
   }
 
-  public static function scopeWithAllLocation(Builder $query)
+  public function scopeWithAllLocation(Builder $query)
   {
       $relations = ['allLocation'];
       static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
       return $query->with($relations);
   }
 
-  public static function scopeWithSuggestedLocation(Builder $query)
+  public function scopeWithSuggestedLocation(Builder $query)
   {
       $relations = ['suggestedLocation'];
       static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
       return $query->with(['suggestedLocation']);
+  }
+
+  public function scopeWithPresentation(Builder $query)
+  {
+      $relations = ['productPresentation'];
+      static::$relationsToInclude = array_merge(static::$relationsToInclude, $relations);
+      return $query->with(['productPresentation']);
+  }
+
+  public function productPresentation(){
+    return $this->hasMany(Presentacion::class, 'HeadProdId', 'headprodid');
   }
 
 

@@ -45,7 +45,8 @@ class InveUbicacionController extends Controller
 
         /*
             ? QUE SE DEBE HACER?
-            * 1) RESTAR CANTIDAD DE LA UBICACION,
+            * 1) RESTAR CANTIDAD DE LA UBICACION,✅
+            * 2) INSERTAR MOVIMIENTO EN TABLA MOVIUBICACION,✅
             * 2) AGREGAR EN TABLA VERIFICA DESPACHOLOG EL PRODUCTO . ¿ LA UBICACION DE DONDE SE SACO DONDE SE RELACION?
 
 

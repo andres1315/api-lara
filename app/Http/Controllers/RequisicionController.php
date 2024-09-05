@@ -16,10 +16,10 @@ class RequisicionController extends Controller
         $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)
             ->withRelations()->get();
         $requisitionArray = $requisitions->map(function ($requisition) {
-            return $requisition->toArray(true);
+            return $requisition->toArray();
         });
 
-        return response()->json(['requisition' => $requisitionArray, 'userAuth' => $request->get('userAuth')]);
+        return response()->json(['requisition' => $requisitionArray]);
     }
 
     public function show(string $id, Request $request)
@@ -31,7 +31,7 @@ class RequisicionController extends Controller
             ->withDispatchLogDetail()
             ->where('HeadRequ.RequisicionId', $id)
             ->firstOrFail();
-        $requisitionArray = $requisition->toArray(true);
+        $requisitionArray = $requisition->toArray();
         return response()->json(['requisitionData' => $requisitionArray]);
     }
 }
