@@ -39,11 +39,11 @@ class InveUbicacion extends Model
     {
         $array = parent::toArray();
         $serializeData = [
-            'id'                  => @$array['Id'],
-            'warehouseId'         => @$array['BandejaId'],
-            'productId'           => @$array['ProductoId'],
-            'lotProductId'        => @$array['LoteProductoId'],
-            'currentInventory'    => @$array['InvenActua'],
+            'id'                  => $array['Id'],
+            'warehouseId'         => $array['BandejaId'],
+            'productId'           => $array['ProductoId'],
+            'lotProductId'        => $array['LoteProductoId'],
+            'currentInventory'    => $array['InvenActua'],
 
         ];
         foreach (static::$relationsToInclude as $relation) {
