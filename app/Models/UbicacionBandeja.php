@@ -15,7 +15,10 @@ class UbicacionBandeja extends Model
     public $timestamps = false;
 
     public function scopeIsActive(Builder $query){
-        return $query->where('Estado', 'A');
+        return $query->join('UbicacionMueble','UbicacionMueble.MuebleId','=','UbicacionBandeja.MuebleId')
+        ->where('UbicacionBandeja.Estado', 'A')
+        ->where('UbicacionMueble.Estado', 'A')
+        ->select('UbicacionBandeja.*','UbicacionMueble.AlmacenId');
     }
 
     public function toArray()
@@ -28,6 +31,8 @@ class UbicacionBandeja extends Model
             'state'               => $array['Estado'],
             'blockInventorySell'  => $array['BloqueaInventarioVentas'],
             'barCode'             => $array['Barras'],
+            'capacity'            => $array['Capacidad'],
+            'warehouseId'         => @$array['AlmacenId'],
 
         ];
 

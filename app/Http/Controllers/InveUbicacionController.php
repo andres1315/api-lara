@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DespachoLog;
 use App\Models\InveUbicacion;
 use App\Models\UbicacionBandeja;
 use App\Models\VerificaDespachoLog;
@@ -58,10 +59,24 @@ class InveUbicacionController extends Controller
         */
         DB::beginTransaction();
         try{
+            /* START DISPATCH */
+            $isDispathWithoutStart = DespachoLog::where([
+                ['Estado','=','A'],
+                ['Id','=',$dispatchLogId],
+
+            ])->whereNull('AlistamientoInicio')->first();
+
+            if($isDispathWithoutStart != null){
+                $isDispathWithoutStart->AlistamientoInicio =date('Y-m-d H:i:s');
+                $isDispathWithoutStart->save();
+            }
+
+            /* UPDATE QTY INVENTORY ON LOCATION */
             $newQtyInventory = ($foundProductOnLocation->InvenActua-$qty);
             $foundProductOnLocation->InvenActua=$newQtyInventory;
             $foundProductOnLocation->save();
 
+            /*  */
             VerificaDespachoLog::create([
                 'DespachoLogId' => $dispatchLogId,
                 'ProductoId' => $productId,
@@ -72,6 +87,7 @@ class InveUbicacionController extends Controller
             DB::commit();
             $response['message'] = "success";
             $response['status'] = 200;
+            $response['data']=$isDispathWithoutStart;
             return response()->json($response,200);
         }catch(Throwable $th){
             DB::rollback();
