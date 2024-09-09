@@ -34,6 +34,8 @@ class SetDatabaseFromHeader
                 'password'  => $dbConfig['password'],
                 'charset'   => 'utf8',
                 'prefix'    => '',
+                'encrypt' => env('DB_ENCRYPT', 'false'),
+                'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
             ]);
 
             DB::setDefaultConnection('client');
