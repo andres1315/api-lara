@@ -64,6 +64,8 @@ class SetClientDatabase
                 'prefix'    => '',
                 'strict'    => false,
                 'engine'    => null,
+                'encrypt' => env('DB_ENCRYPT', 'false'),
+                'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
             ]);
 
             DB::setDefaultConnection('client');
