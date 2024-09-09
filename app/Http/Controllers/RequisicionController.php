@@ -13,8 +13,7 @@ class RequisicionController extends Controller
     {
         $user = (object) $request->get('userAuth');
 
-        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)
-            ->withRelations()->get();
+        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)->withRelations()->get();
         $requisitionArray = $requisitions->map(function ($requisition) {
             return $requisition->toArray();
         });

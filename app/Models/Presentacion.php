@@ -10,35 +10,30 @@ class Presentacion extends Model
     use HasFactory;
     protected $table = 'Presentacion';
     protected $primaryKey = 'PresentacionId';
-  
     public $timestamps = false;
-    
 
-    public function toArray()
-    {
+
+    public function toArray(){
         $array = parent::toArray();
 
         $serializeData = [
             'id'                => $array['PresentationId'],
             'headProdId'        => $array['HeadProdId'],
             'name'              => $array['Nombre'],
-            'reference'         => $array['Valor'],
-            'name'              => $array['Factor'],
-            'type'              => $array['Reemplaza'],
-            'nameSupplier'      => $array['Venta'],
-            'init'              => $array['DefectoVenta'],
-            'inventoryMonth'    => $array['Compra'],
-            'state'             => $array['defectoCompra'],
-            'cost'              => $array['Inventario'],
-            'averageCost'       => $array['DefectoInventario'],
-            'averageCost'       => $array['Pasta'],
-            'averageCost'       => $array['Blister'],
-            'averageCost'       => $array['Estado'],
-            'averageCost'       => $array['UnidadDianId'],
+            'value'             => $array['Valor'],
+            'factor'            => $array['Factor'],
+            'replace'           => $array['Reemplaza'],
+            'sale'              => $array['Venta'],
+            'salereDefect'      => $array['DefectoVenta'],
+            'buy'               => $array['Compra'],
+            'buyDefect'         => $array['defectoCompra'],
+            'inventory'         => $array['Inventario'],
+            'inventoryDefect'   => $array['DefectoInventario'],
+            'pill'              => $array['Pasta'],
+            'blister'           => $array['Blister'],
+            'state'             => $array['Estado'],
+            'undDIANId'         => $array['UnidadDianId'],
         ];
-
-
-
         return $serializeData;
     }
 }

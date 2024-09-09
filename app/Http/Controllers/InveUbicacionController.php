@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DespachoLog;
 use App\Models\InveUbicacion;
 use App\Models\UbicacionBandeja;
 use App\Models\VerificaDespachoLog;
@@ -11,8 +12,6 @@ use Throwable;
 
 class InveUbicacionController extends Controller
 {
-   
-    
     public function newQtyProductLocation(Request $request){
         $productId = $request->input('product');
         $qty = $request->input('qty');
@@ -33,7 +32,7 @@ class InveUbicacionController extends Controller
         $parseFoundLocation =  (object)$foundLocation->toArray();
 
         $foundProductOnLocation = InveUbicacion::FilterTrayAndProduct($productId,$parseFoundLocation->id)->first();
-        
+
         if( $foundProductOnLocation == null ){
             $response['message'] = "No se encontro el producto $productId en la  posicion $location";
             $response['status'] = 400;
@@ -58,6 +57,17 @@ class InveUbicacionController extends Controller
         */
         DB::beginTransaction();
         try{
+            /* START DISPATCH */
+            $isDispathWithoutStart = DespachoLog::where([
+                ['Estado','=','A'],
+                ['Id','=',$dispatchLogId],
+
+            ])->whereNull('AlistamientoInicio')->first();
+            if($isDispathWithoutStart != null){
+                $isDispathWithoutStart->AlistamientoInicio =date('Y-m-d H:i:s');
+                $isDispathWithoutStart->save();
+            }
+            /* UPDATE QTY INVENTORY ON LOCATION */
             $newQtyInventory = ($foundProductOnLocation->InvenActua-$qty);
             $foundProductOnLocation->InvenActua=$newQtyInventory;
             $foundProductOnLocation->save();
@@ -68,14 +78,13 @@ class InveUbicacionController extends Controller
                 'Cantidad' => $qty,
                 'Fecha' => date('Y-m-d H:i:s')
             ]);
-    
+
             DB::commit();
             $response['message'] = "success";
             $response['status'] = 200;
             return response()->json($response,200);
         }catch(Throwable $th){
             DB::rollback();
-            $response['message'] = "success";
             $response['message'] =  $th->getMessage();
             $response['status'] = 400;
             return response()->json($response,400);
