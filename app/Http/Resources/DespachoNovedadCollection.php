@@ -12,14 +12,10 @@ class DespachoNovedadCollection extends ResourceCollection
      *
      * @return array<int|string, mixed>
      */
+
+
     public function toArray(Request $request): array
     {
-
-        return [
-            'id'    => $this->NovedadId,
-            'name'  => $this->Nombre,
-            'state' => $this->Estado,
-            /* 'detail' => DespachoLogNovedadCollection::collection($this->whenLoaded('posts')), */
-        ];
+        return parent::toArray($request);
     }
 }

@@ -14,13 +14,6 @@ class DespachoLogNovedadCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return [
-            'id'            => $this->Id,
-            'dispatchLogId' => $this->DespachoLogId,
-            'newsId'        => $this->NovedadId,
-            'date'          => $this->Fecha,
-            'type'          => $this->Tipo,
-
-        ];
+        return parent::toArray($request);
     }
 }

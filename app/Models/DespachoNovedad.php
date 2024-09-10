@@ -21,7 +21,8 @@ class DespachoNovedad extends Model
             ['DespachoNovedad.Estado','=', 'A'],
             ['DespachoLogNovedad.Tipo','=', $type],
         ])
-        ->select('DespachoNovedad.*');
+        ->select('DespachoNovedad.*')
+        ->groupBy('DespachoNovedad.NovedadId','DespachoNovedad.Nombre','DespachoNovedad.Estado');
     }
 
     public function detailNewsDispatch(): HasMany{
@@ -29,8 +30,10 @@ class DespachoNovedad extends Model
     }
 
 
-    public function scopeWithDetailDispatch(Builder $query){
-        return $query->with(['detailNewsDispatch']);
+    public function scopeWithDetailDispatch(Builder $query,$dispatchLogId): Builder{
+        return $query->with(['detailNewsDispatch'=> function($query) use($dispatchLogId){
+            $query->where('DespachoLogId','=', $dispatchLogId);
+        }]);
     }
 /*
     public function toArray(){

@@ -2,8 +2,15 @@
 
 namespace App\Http\Controllers;
 
+
+use App\Http\Resources\DespachoNovedad as DespachoNovedadResource;
+use App\Http\Resources\DespachoNovedadCollection;
+use App\Models\DespachoLogNovedad;
 use App\Models\DespachoNovedad;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class DespachoLogNovedadController extends Controller
 {
@@ -20,7 +27,39 @@ class DespachoLogNovedadController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $dispatchLogId = $request->input('dispatchLogId');
+        $dispatchNewsId = $request->input('dispatchNewsId');
+        $type = $request->input('type');
+        $response = [
+            'message' => '',
+            'status'  => 200,
+        ];
+
+        DB::beginTransaction();
+        try{
+            /**
+            * * AL -> ALISTAMIENTO
+            * * EM -> EMPAQUE
+             */
+
+            $newDispatchLog = DespachoLogNovedad::create([
+                'DespachoLogId' => $dispatchLogId,
+                'NovedadId' => $dispatchNewsId,
+                'Fecha' => date('Y-m-d H:i:s'),
+                'Tipo' => $type,
+            ]);
+            DB::commit();
+            $response['message'] = "success";
+            $response['status'] = 200;
+            $response['data'] =$newDispatchLog;
+        }catch(Throwable $th){
+            DB::rollback();
+            $response['message'] =  $th->getMessage();
+            $response['status'] = 400;
+            return response()->json($response,400);
+        }
+
+
     }
 
     /**
@@ -28,14 +67,19 @@ class DespachoLogNovedadController extends Controller
      */
     public function show(string $id)
     {
-        $collection =
+       $newsDispatch= new DespachoNovedadCollection(
             DespachoNovedad::ActiveAndFilterType('AL')
-            ->withDetailDispatch()
+            ->withDetailDispatch($id)
             ->where('DespachoLogNovedad.DespachoLogId', $id)
-            ->get();
+            ->get()
+        );
+
+        $allHeadNewsDispatch =new DespachoNovedadCollection(
+            DespachoNovedad::where('Estado', 'A')->get()
+        );
 
 
-        return response()->json(['newsDispatch' => $collection]);
+        return response()->json(['newsDispatch' => $newsDispatch, 'headDispatch' =>$allHeadNewsDispatch]);
 
     }
 

@@ -17,7 +17,7 @@ class DespachoLogNovedad extends Model
     protected $primaryKey = 'Id';
     public $timestamps = false;
 
-
+    protected $fillable = ['DespachoLogId', 'NovedadId', 'Fecha','Tipo'];
     public function scopeActiveAndFilterType(Builder $query,$type){
         return $query->join('DespachoNovedad','DespachoLogNovedad.NovedadId','=','DespachoNovedad.NovedadId')
         ->where([
