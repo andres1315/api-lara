@@ -31,7 +31,7 @@ class DespachoLogNovedadController extends Controller
         $dispatchNewsId = $request->input('dispatchNewsId');
         $type = $request->input('type');
         $response = [
-            'message' => '',
+            'message' => 'success',
             'status'  => 200,
         ];
 
@@ -49,14 +49,13 @@ class DespachoLogNovedadController extends Controller
                 'Tipo' => $type,
             ]);
             DB::commit();
-            $response['message'] = "success";
-            $response['status'] = 200;
             $response['data'] =$newDispatchLog;
+            return response()->json($response,$response['status']);
         }catch(Throwable $th){
             DB::rollback();
             $response['message'] =  $th->getMessage();
             $response['status'] = 400;
-            return response()->json($response,400);
+            return response()->json($response,$response['status']);
         }
 
 

@@ -20,7 +20,7 @@ class HeadRequ extends Model
 
   public function requDetail(): HasMany
   {
-    return $this->hasMany(Requisicion::class, 'RequisicionId', 'RequisicionId');
+    return $this->hasMany(Requisicion::class, 'RequisicionId', 'RequisicionId')->where('Requisicion.NoPendiente','=',0);
   }
   public function userRequest(): HasOne
   {
@@ -54,6 +54,7 @@ class HeadRequ extends Model
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
+   ->whereNull('DespachoLog.Alistamientofin')
    ->select('HeadRequ.*')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
@@ -146,7 +147,7 @@ class HeadRequ extends Model
         $serializeData[$relation] = $this->$relation;
       }
     }
-    
+
 
 
     return $serializeData;
