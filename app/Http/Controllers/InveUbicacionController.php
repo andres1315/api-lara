@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\DespachoLog;
 use App\Models\InveUbicacion;
+use App\Models\MoviUbicacion;
 use App\Models\UbicacionBandeja;
 use App\Models\VerificaDespachoLog;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -17,13 +19,13 @@ class InveUbicacionController extends Controller
         $qty = $request->input('qty');
         $location = $request->input('location');
         $dispatchLogId = $request->input('dispatchLogId');
+        $user = (object) $request->get('userAuth');
         $response = [
             'message' => '',
             'status'  => 200,
         ];
 
-        $foundLocation = UbicacionBandeja::IsActive()
-        ->where('Barras', $location)->first();
+        $foundLocation = UbicacionBandeja::IsActive()->where('Barras', $location)->first();
         if( $foundLocation == null ){
             $response['message'] = "No se encontro la posicion $location";
             $response['status'] = 400;
@@ -46,17 +48,13 @@ class InveUbicacionController extends Controller
             return response()->json($response,400);
         }
 
-
-        /*
-            ? QUE SE DEBE HACER?
-            * 1) RESTAR CANTIDAD DE LA UBICACION,✅
-            * 2) INSERTAR MOVIMIENTO EN TABLA MOVIUBICACION,✅
-            * 2) AGREGAR EN TABLA VERIFICA DESPACHOLOG EL PRODUCTO . ¿ LA UBICACION DE DONDE SE SACO DONDE SE RELACION?
-
-
-        */
         DB::beginTransaction();
         try{
+            $response=[
+                'message'   => 'success',
+                'status'    => 200
+            ];
+
             /* START DISPATCH */
             $isDispathWithoutStart = DespachoLog::where([
                 ['Estado','=','A'],
@@ -72,6 +70,30 @@ class InveUbicacionController extends Controller
             $foundProductOnLocation->InvenActua=$newQtyInventory;
             $foundProductOnLocation->save();
 
+            $outputMovement = 'S';
+            $trayId = $parseFoundLocation->id;
+            $wareHouseId = $parseFoundLocation->forniture->AlmacenId;
+            /**
+             *  ?   UsuariodId debe ser un id de la tabla segur, pero en la app se inicia con un operario?
+             *  ?   TIpoOrigen char4 que tipo origen es para los movimientos desde la app
+             *  ?   NUmeroOrigen para los movimientos de pciking
+             *  ?   Que estado debe ser null o vacio ?
+             *
+             *
+            */
+            MoviUbicacion::create([
+                'Fecha'             => date('Y-m-d'),
+                'TipoMovimiento'    => $outputMovement,
+                'BandejaId'         => $trayId,
+                'ProductoId'        => $productId,
+                'Cantidad'          => $qty,
+                'FechaRegistro'     => now(),
+                'UsuarioId'         => 487,//$user->operarioid ,
+                'AlmacenId'         => $wareHouseId
+
+            ]);
+
+            /* INSERT LOG DISPATCH */
             VerificaDespachoLog::create([
                 'DespachoLogId' => $dispatchLogId,
                 'ProductoId' => $productId,
@@ -80,14 +102,13 @@ class InveUbicacionController extends Controller
             ]);
 
             DB::commit();
-            $response['message'] = "success";
-            $response['status'] = 200;
-            return response()->json($response,200);
+
+            return response()->json($response,$response['status']);
         }catch(Throwable $th){
             DB::rollback();
             $response['message'] =  $th->getMessage();
             $response['status'] = 400;
-            return response()->json($response,400);
+            return response()->json($response,$response['status']);
         }
 
 
