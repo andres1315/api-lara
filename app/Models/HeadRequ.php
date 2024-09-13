@@ -86,11 +86,7 @@ class HeadRequ extends Model
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with([
         'requDetail' => function ($query) {
-            $query->with([
-                'product' => function ($query) {
-                    $query->withSuggestedLocation()->withPresentation();
-                }
-            ]);
+            $query->withProductLocations();
         }
     ]);
   }

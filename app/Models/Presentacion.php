@@ -17,7 +17,7 @@ class Presentacion extends Model
         $array = parent::toArray();
 
         $serializeData = [
-            'id'                => $array['PresentationId'],
+            'id'                => $array['PresentacionId'],
             'headProdId'        => $array['HeadProdId'],
             'name'              => $array['Nombre'],
             'value'             => $array['Valor'],
@@ -26,7 +26,7 @@ class Presentacion extends Model
             'sale'              => $array['Venta'],
             'salereDefect'      => $array['DefectoVenta'],
             'buy'               => $array['Compra'],
-            'buyDefect'         => $array['defectoCompra'],
+            'buyDefect'         => $array['DefectoCompra'],
             'inventory'         => $array['Inventario'],
             'inventoryDefect'   => $array['DefectoInventario'],
             'pill'              => $array['Pasta'],

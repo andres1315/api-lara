@@ -32,6 +32,9 @@ class RequisicionController extends Controller
             ->withDispatchLogDetail()
             ->where('HeadRequ.RequisicionId', $id)
             ->firstOrFail();
+            foreach($requisition->requDetail as $requisitionDetail){
+                $requisitionDetail->applyPresentationFilter();
+            }
         $requisitionArray = $requisition->toArray();
         return response()->json(['requisitionData' => $requisitionArray]);
     }
