@@ -29,7 +29,7 @@ class Requisicion extends Model
 
   public function applyPresentationFilter(){
     return $this->load(['product' => function($query){
-      $query->withPresentation($this->PresentacionId);
+      $query->withPresentation($this->PresentacionId)->withSuggestedLocation();
     }]);
   }
 
@@ -37,10 +37,8 @@ class Requisicion extends Model
 { 
   
   
-  $query->with(['product' => function ($query) {
-        $query->withSuggestedLocation();
-    }]);
-    return $query;
+  $query->with(['product']);
+  return $query;
 }
 
 

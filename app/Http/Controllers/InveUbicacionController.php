@@ -7,7 +7,7 @@ use App\Models\InveUbicacion;
 use App\Models\MoviUbicacion;
 use App\Models\UbicacionBandeja;
 use App\Models\VerificaDespachoLog;
-use Exception;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -81,6 +81,7 @@ class InveUbicacionController extends Controller
              *
              *
             */
+            
             MoviUbicacion::create([
                 'Fecha'             => date('Y-m-d'),
                 'TipoMovimiento'    => $outputMovement,
