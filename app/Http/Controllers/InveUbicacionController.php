@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\NewQtyProducLocationRequest;
 use App\Models\DespachoLog;
 use App\Models\InveUbicacion;
 use App\Models\MoviUbicacion;
@@ -10,11 +11,31 @@ use App\Models\VerificaDespachoLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class InveUbicacionController extends Controller
 {
-    public function newQtyProductLocation(Request $request){
+    public function newQtyProductLocation(Request $request)
+    {
+        $messageValidator = [
+            'dispatchLogId.required' => 'DespachoLogId es Requerido'
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'product' => 'required',
+            'qty' => 'required',
+            'location' => 'required',
+            'dispatchLogId' => 'required',
+        ],$messageValidator);
+
+        if ($validator->fails()) {
+            $response['errors'] =$validator->errors();
+            $response['success'] =false;
+            $response['status'] =400;
+            return  response()->json($response, 400);
+        }
+
         $productId = $request->input('product');
         $qty = $request->input('qty');
         $location = $request->input('location');
@@ -22,52 +43,52 @@ class InveUbicacionController extends Controller
         $user = (object) $request->get('userAuth');
         $response = [
             'message' => '',
-            'status'  => 200,
+            'status' => 200,
         ];
 
         $foundLocation = UbicacionBandeja::IsActive()->where('Barras', $location)->first();
-        if( $foundLocation == null ){
+        if ($foundLocation == null) {
             $response['message'] = "No se encontro la posicion $location";
             $response['status'] = 400;
-            return response()->json($response,400);
+            return response()->json($response, 400);
         }
-        $parseFoundLocation =  (object)$foundLocation->toArray();
+        $parseFoundLocation = (object) $foundLocation->toArray();
 
-        $foundProductOnLocation = InveUbicacion::FilterTrayAndProduct($productId,$parseFoundLocation->id)->first();
+        $foundProductOnLocation = InveUbicacion::FilterTrayAndProduct($productId, $parseFoundLocation->id)->first();
 
-        if( $foundProductOnLocation == null ){
+        if ($foundProductOnLocation == null) {
             $response['message'] = "No se encontro el producto $productId en la  posicion $location";
             $response['status'] = 400;
-            return response()->json($response,400);
+            return response()->json($response, 400);
         }
-        $parseFoundProductOnLocation =  (object) $foundProductOnLocation->toArray();
-        if( round($parseFoundProductOnLocation->currentInventory) < $qty   ){
-            $roundedQty =round($parseFoundProductOnLocation->currentInventory);
+        $parseFoundProductOnLocation = (object) $foundProductOnLocation->toArray();
+        if (round($parseFoundProductOnLocation->currentInventory) < $qty) {
+            $roundedQty = round($parseFoundProductOnLocation->currentInventory);
             $response['message'] = "La cantidad en la ubicación es menor. Cantidad Actual: {$roundedQty}";
             $response['status'] = 400;
-            return response()->json($response,400);
+            return response()->json($response, 400);
         }
 
         DB::beginTransaction();
-        try{
-            $response=[
-                'message'   => 'success',
-                'status'    => 200
+        try {
+            $response = [
+                'message' => 'success',
+                'status' => 200
             ];
 
             /* START DISPATCH */
             $isDispathWithoutStart = DespachoLog::where([
-                ['Estado','=','A'],
-                ['Id','=',$dispatchLogId],
+                ['Estado', '=', 'A'],
+                ['Id', '=', $dispatchLogId],
 
             ])->whereNull('AlistamientoInicio')->first();
-            if($isDispathWithoutStart != null){
-                $isDispathWithoutStart->AlistamientoInicio =now();
+            if ($isDispathWithoutStart != null) {
+                $isDispathWithoutStart->AlistamientoInicio = now();
                 $isDispathWithoutStart->save();
             }
             /* UPDATE QTY INVENTORY ON LOCATION */
-            $newQtyInventory = ($foundProductOnLocation->InvenActua-$qty);
-            $foundProductOnLocation->InvenActua=$newQtyInventory;
+            $newQtyInventory = ($foundProductOnLocation->InvenActua - $qty);
+            $foundProductOnLocation->InvenActua = $newQtyInventory;
             $foundProductOnLocation->save();
 
             $outputMovement = 'S';
@@ -80,7 +101,7 @@ class InveUbicacionController extends Controller
              *  ?   Que estado debe ser null o vacio ?
              *
              *
-            */
+             */
 
 
 
@@ -93,24 +114,24 @@ class InveUbicacionController extends Controller
             ]);
 
             MoviUbicacion::create([
-                'Fecha'             => date('Y-m-d'),
-                'TipoMovimiento'    => $outputMovement,
-                'BandejaId'         => $trayId,
-                'ProductoId'        => $productId,
-                'Cantidad'          => $qty,
-                'FechaRegistro'     => now(),
-                'AlmacenId'         => $wareHouseId
+                'Fecha' => date('Y-m-d'),
+                'TipoMovimiento' => $outputMovement,
+                'BandejaId' => $trayId,
+                'ProductoId' => $productId,
+                'Cantidad' => $qty,
+                'FechaRegistro' => now(),
+                'AlmacenId' => $wareHouseId
 
             ]);
 
             DB::commit();
 
-            return response()->json($response,$response['status']);
-        }catch(Throwable $th){
+            return response()->json($response, $response['status']);
+        } catch (Throwable $th) {
             DB::rollback();
-            $response['message'] =  $th->getMessage();
+            $response['message'] = $th->getMessage();
             $response['status'] = 400;
-            return response()->json($response,$response['status']);
+            return response()->json($response, $response['status']);
         }
 
 
