@@ -28,7 +28,7 @@ class SetDatabaseFromHeader
 
             config()->set('database.connections.client', [
                 'driver'    => 'sqlsrv',
-                'host'      => $dbConfig['host'],
+                'host'      => $dbConfig['host'],/*  */
                 'database'  => $dbConfig['database'],
                 'username'  => $dbConfig['username'],
                 'password'  => $dbConfig['password'],
@@ -39,6 +39,7 @@ class SetDatabaseFromHeader
             ]);
 
             DB::setDefaultConnection('client');
+            DB::connection()->getPdo()->exec("SET DATEFORMAT ymd");
         } catch (\Exception $e) {
             $message = $e->getMessage();
             return response()->json(['error' => 'Invalid database configuration','message'=>$message], 400);

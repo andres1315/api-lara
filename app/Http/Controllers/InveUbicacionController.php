@@ -62,7 +62,7 @@ class InveUbicacionController extends Controller
 
             ])->whereNull('AlistamientoInicio')->first();
             if($isDispathWithoutStart != null){
-                $isDispathWithoutStart->AlistamientoInicio =date('Y-m-d H:i:s');
+                $isDispathWithoutStart->AlistamientoInicio =now();
                 $isDispathWithoutStart->save();
             }
             /* UPDATE QTY INVENTORY ON LOCATION */
@@ -81,7 +81,17 @@ class InveUbicacionController extends Controller
              *
              *
             */
-            
+
+
+
+            /* INSERT LOG DISPATCH */
+            VerificaDespachoLog::create([
+                'DespachoLogId' => $dispatchLogId,
+                'ProductoId' => $productId,
+                'Cantidad' => $qty,
+                'Fecha' => date('Y-m-d')
+            ]);
+
             MoviUbicacion::create([
                 'Fecha'             => date('Y-m-d'),
                 'TipoMovimiento'    => $outputMovement,
@@ -89,17 +99,8 @@ class InveUbicacionController extends Controller
                 'ProductoId'        => $productId,
                 'Cantidad'          => $qty,
                 'FechaRegistro'     => now(),
-                'UsuarioId'         => 487,//$user->operarioid ,
                 'AlmacenId'         => $wareHouseId
 
-            ]);
-
-            /* INSERT LOG DISPATCH */
-            VerificaDespachoLog::create([
-                'DespachoLogId' => $dispatchLogId,
-                'ProductoId' => $productId,
-                'Cantidad' => $qty,
-                'Fecha' => date('Y-m-d H:i:s')
             ]);
 
             DB::commit();

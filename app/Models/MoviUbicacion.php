@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,6 +13,11 @@ class MoviUbicacion extends Model
     protected $table = 'MoviUbicacion';
     protected $primaryKey = 'MovimientoId';
     public $timestamps = false;
+
+
+
     protected $fillable = ['Fecha', 'TipoMovimiento', 'BandejaId','ProductoId','Cantidad','TipoOrigen','NumeroOrigen','FechaRegistro','UsuarioId','AlmacenId'];
+
+
 
 }
