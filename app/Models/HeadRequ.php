@@ -76,7 +76,7 @@ class HeadRequ extends Model
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', 'store', 'warehouse', 'dependency'];
+    $relations = ['userRequest', 'warehouse', 'dependency'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -84,11 +84,9 @@ class HeadRequ extends Model
   public function scopeWithDetailRequisition(Builder $query){
     $relations = ['requDetail'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
-    return $query->with([
-        'requDetail' => function ($query) {
-            $query->withProductLocations();
-        }
-    ]);
+
+
+    return $query->with(['requDetail']);
   }
 
 

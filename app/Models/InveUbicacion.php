@@ -31,8 +31,16 @@ class InveUbicacion extends Model
         return $this->hasOne(UbicacionBandeja::class, 'BandejaId', 'BandejaId');
     }
 
-    public function scopeFilterTrayAndProduct(Builder $query, $product,$tray){
-        return $query->where('BandejaId',$tray)->where('ProductoId',$product);
+    public function scopeFilterTrayAndProduct(Builder $query, $product,$tray,$warehouseRq){
+        return $query
+        ->join('UbicacionBandeja','UbicacionBandeja.BandejaId','=','InveUbicacion.BandejaId')
+        ->join('UbicacionMueble',function($join) use($warehouseRq){
+            $join->on('UbicacionBandeja.MuebleId','=','UbicacionMueble.Muebleid')
+            ->where('UbicacionMueble.Estado','=','A')
+            ->where('UbicacionBandeja.Estado','=','A')
+            ->where('UbicacionMueble.AlmacenId','=',$warehouseRq);
+        })
+        ->where('InveUbicacion.BandejaId',$tray)->where('InveUbicacion.ProductoId',$product);
     }
 
     public function toArray()
@@ -40,7 +48,7 @@ class InveUbicacion extends Model
         $array = parent::toArray();
         $serializeData = [
             'id'                  => $array['Id'],
-            'warehouseId'         => $array['BandejaId'],
+            'trayId'              => $array['BandejaId'],
             'productId'           => $array['ProductoId'],
             'lotProductId'        => $array['LoteProductoId'],
             'currentInventory'    => $array['InvenActua'],

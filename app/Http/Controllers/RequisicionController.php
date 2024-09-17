@@ -32,8 +32,10 @@ class RequisicionController extends Controller
             ->withDispatchLogDetail()
             ->where('HeadRequ.RequisicionId', $id)
             ->firstOrFail();
+            $warehouseRq = $requisition->BodegaId;
             foreach($requisition->requDetail as $requisitionDetail){
-                $requisitionDetail->applyPresentationFilter();
+
+                $requisitionDetail->withSuggestedLocationProducts($warehouseRq);
             }
         $requisitionArray = $requisition->toArray();
         return response()->json(['requisitionData' => $requisitionArray]);

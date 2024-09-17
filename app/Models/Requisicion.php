@@ -21,26 +21,27 @@ class Requisicion extends Model
     return $this->BelongsTo(HeadRequ::class, 'RequisicionId', 'RequisicionId');
   }
 
-  public function product(): HasOne 
+  public function product(): HasOne
   {
      $relation =$this->HasOne(Producto::class, 'productoid', 'ProductoId');
     return $relation;
   }
 
+
+
   public function applyPresentationFilter(){
     return $this->load(['product' => function($query){
-      $query->withPresentation($this->PresentacionId)->withSuggestedLocation();
+      $query->withPresentation($this->PresentacionId);
     }]);
   }
 
-  public function scopeWithProductLocations(Builder $query)
-{ 
-  
-  
-  $query->with(['product']);
-  return $query;
-}
 
+  public function scopeWithSuggestedLocationProducts(Builder $query,$warehouseRq=null){
+
+    return $this->load(['product' => function($query) use($warehouseRq){
+      $query->withMainSuggestedLocation($warehouseRq);
+    }]);
+  }
 
   public function toArray()
   {

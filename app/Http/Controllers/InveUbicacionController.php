@@ -19,18 +19,23 @@ class InveUbicacionController extends Controller
     public function newQtyProductLocation(Request $request)
     {
         $messageValidator = [
-            'dispatchLogId.required' => 'DespachoLogId es Requerido'
+            'dispatchLogId.required'    => 'dispatchLogId es Requerido',
+            'warehouseId.required'      => 'warehouseId es Requerido',
+            'location.required'         => 'location es Requerido',
+            'product.required'          => 'product es Requerido',
+
         ];
 
         $validator = Validator::make($request->all(), [
-            'product' => 'required',
-            'qty' => 'required',
-            'location' => 'required',
+            'product'       => 'required',
+            'qty'           => 'required',
+            'location'      => 'required',
             'dispatchLogId' => 'required',
+            'warehouseId'   => 'required'
         ],$messageValidator);
 
         if ($validator->fails()) {
-            $response['errors'] =$validator->errors();
+            $response['message'] =$validator->errors();
             $response['success'] =false;
             $response['status'] =400;
             return  response()->json($response, 400);
@@ -40,6 +45,7 @@ class InveUbicacionController extends Controller
         $qty = $request->input('qty');
         $location = $request->input('location');
         $dispatchLogId = $request->input('dispatchLogId');
+        $warehouseId = $request->input('warehouseId');
         $user = (object) $request->get('userAuth');
         $response = [
             'message' => '',
@@ -54,7 +60,7 @@ class InveUbicacionController extends Controller
         }
         $parseFoundLocation = (object) $foundLocation->toArray();
 
-        $foundProductOnLocation = InveUbicacion::FilterTrayAndProduct($productId, $parseFoundLocation->id)->first();
+        $foundProductOnLocation = InveUbicacion::FilterTrayAndProduct($productId, $parseFoundLocation->id,$warehouseId)->first();
 
         if ($foundProductOnLocation == null) {
             $response['message'] = "No se encontro el producto $productId en la  posicion $location";
