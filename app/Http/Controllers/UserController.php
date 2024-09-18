@@ -13,7 +13,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $users = User::where('Estado','A')->where('nombre','!=','')->get();
+        $users = User::where('Estado','A')->get();
         return response()->json(['users'=>$users,'userAuth'=>$request->get('userAuth')]);
     }
 

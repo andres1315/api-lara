@@ -142,4 +142,35 @@ class InveUbicacionController extends Controller
 
 
     }
+
+    public function filterProducts(Request $request){
+        try{
+
+            $messageValidator = [
+                'find.required'    => 'find es Requerido',
+            ];
+
+            $validator = Validator::make($request->all(), [
+                'find'       => 'required'
+            ],$messageValidator);
+
+            if ($validator->fails()) {
+                $response['message'] =$validator->errors();
+                $response['success'] =false;
+                $response['status'] =400;
+                return  response()->json($response, 400);
+            }
+
+            $filterText = strtoupper($request->input('find'));
+            $user = (object) $request->get('userAuth');
+
+            $result = InveUbicacion::withFilteredProductsAndLocations($filterText)
+            ->withProduct()
+            ->withTray()
+            ->get();
+            return response()->json($result,200);
+        }catch(Throwable $th){
+
+        }
+    }
 }

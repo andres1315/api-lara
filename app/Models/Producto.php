@@ -102,7 +102,7 @@ class Producto extends Model
             'name' => $array['nombre'],
             'type' => $array['Tipo'],
             'nameSupplier' => $array['nombrprove'],
-            'init' => $array['unidad'],
+            'unit' => $array['unidad'],
             'inventoryMonth' => $array['inventames'],
             'size' => ['id' => $array['tallaid'], 'name' => $array['nombrtalla']],
             'color' => ['id' => $array['colorid'], 'name' => $array['nombrcolor']],

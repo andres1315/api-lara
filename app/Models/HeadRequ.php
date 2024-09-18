@@ -61,17 +61,10 @@ class HeadRequ extends Model
 
 
   public function scopeWithDispatchLog(Builder $query){
-
-
     $relations = ['dispatchLog'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
-
-
-
   }
-
-
 
 
   public function scopeWithRelations(Builder $query)
