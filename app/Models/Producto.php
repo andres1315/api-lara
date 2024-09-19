@@ -89,6 +89,14 @@ class Producto extends Model
         return $this->hasMany(Presentacion::class, 'HeadProdId', 'headprodid');
     }
 
+    public function scopeWithPictureProduct(Builder $query){
+
+        $query->join('HeadProd', 'HeadProd.headprodid','=','vwProducto.headprodid')
+        ->select('vwProducto.*','HeadProd.foto');
+
+        return $query;
+    }
+
 
     public function toArray()
     {
@@ -113,6 +121,7 @@ class Producto extends Model
             'averageCost' => $array['costoprome'],
             'presetantionId' => $array['PresentacionId'] ?? null,
             'namePresentation' => $array['namePresentation'] ?? null,
+            'picture' => isset($array['foto'])  ? 'data:image/jpeg;base64,' . base64_encode($array['foto']) : null,
         ];
 
         foreach (static::$relationsToInclude as $relation) {

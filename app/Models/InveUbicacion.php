@@ -66,6 +66,13 @@ class InveUbicacion extends Model
             });
     }
 
+    public function scopeWithPictureProduct (Builder $query){
+
+        return $query->with(['product'=>function ($q){
+            $q->withPictureProduct();
+        }]);
+    }
+
 
 
 

@@ -23,7 +23,7 @@ class Requisicion extends Model
 
   public function product(): HasOne
   {
-     $relation =$this->HasOne(Producto::class, 'productoid', 'ProductoId');
+     $relation =$this->HasOne(Producto::class, 'productoid', 'ProductoId')->withPictureProduct();
     return $relation;
   }
 

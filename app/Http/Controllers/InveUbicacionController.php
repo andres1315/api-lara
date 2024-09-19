@@ -19,19 +19,21 @@ class InveUbicacionController extends Controller
     public function newQtyProductLocation(Request $request)
     {
         $messageValidator = [
-            'dispatchLogId.required'    => 'dispatchLogId es Requerido',
-            'warehouseId.required'      => 'warehouseId es Requerido',
-            'location.required'         => 'location es Requerido',
-            'product.required'          => 'product es Requerido',
+            'dispatchLogId.required'            => 'dispatchLogId es Requerido',
+            'warehouseId.required'              => 'warehouseId es Requerido',
+            'location.required'                 => 'location es Requerido',
+            'product.required'                  => 'product es Requerido',
+            'idsDetailsRequisitions.required'   => 'idsDetailsRequisitions es Requerido'
 
         ];
 
         $validator = Validator::make($request->all(), [
-            'product'       => 'required',
-            'qty'           => 'required',
-            'location'      => 'required',
-            'dispatchLogId' => 'required',
-            'warehouseId'   => 'required'
+            'product'                   => 'required',
+            'qty'                       => 'required',
+            'location'                  => 'required',
+            'dispatchLogId'             => 'required',
+            'warehouseId'               => 'required',
+            'idsDetailsRequisitions'    => 'required'
         ],$messageValidator);
 
         if ($validator->fails()) {
@@ -41,15 +43,17 @@ class InveUbicacionController extends Controller
             return  response()->json($response, 400);
         }
 
-        $productId = $request->input('product');
-        $qty = $request->input('qty');
-        $location = $request->input('location');
-        $dispatchLogId = $request->input('dispatchLogId');
-        $warehouseId = $request->input('warehouseId');
-        $user = (object) $request->get('userAuth');
+        $productId              = $request->input('product');
+        $qty                    = $request->input('qty');
+        $location               = $request->input('location');
+        $dispatchLogId          = $request->input('dispatchLogId');
+        $warehouseId            = $request->input('warehouseId');
+        $idsDetailsRequisitions = $request->input('idsDetailsRequisitions');
+        $user                   = (object) $request->get('userAuth');
+
         $response = [
-            'message' => '',
-            'status' => 200,
+            'message'   => '',
+            'status'    => 200,
         ];
 
         $foundLocation = UbicacionBandeja::IsActive()->where('Barras', $location)->first();
@@ -82,42 +86,52 @@ class InveUbicacionController extends Controller
                 'status' => 200
             ];
 
-            /* START DISPATCH */
-            $isDispathWithoutStart = DespachoLog::where([
-                ['Estado', '=', 'A'],
-                ['Id', '=', $dispatchLogId],
 
-            ])->whereNull('AlistamientoInicio')->first();
-            if ($isDispathWithoutStart != null) {
-                $isDispathWithoutStart->AlistamientoInicio = now();
-                $isDispathWithoutStart->save();
-            }
             /* UPDATE QTY INVENTORY ON LOCATION */
             $newQtyInventory = ($foundProductOnLocation->InvenActua - $qty);
             $foundProductOnLocation->InvenActua = $newQtyInventory;
             $foundProductOnLocation->save();
 
+
+
+            $resultGroup = $this->getDispatchToGroupRequisitions($idsDetailsRequisitions,$dispatchLogId,$qty);
+
+            if(!$resultGroup['success']){
+                DB::rollback();
+                $response['message'] = $resultGroup['message'];
+                $response['status'] = 400;
+                return response()->json($response, $response['status']);
+
+            }
+
+            $itemsVerifyDispatchLog = $resultGroup['data'];
+
+            foreach ($itemsVerifyDispatchLog as $key => $item) {
+                /* START DISPATCH */
+                $isDispathWithoutStart = DespachoLog::where([
+                    ['Estado', '=', 'A'],
+                    ['Id', '=', $item["dispatchLogId"]],
+
+                ])->whereNull('AlistamientoInicio')->first();
+                if ($isDispathWithoutStart != null) {
+                    $isDispathWithoutStart->AlistamientoInicio = now();
+                    $isDispathWithoutStart->save();
+                }
+
+
+                VerificaDespachoLog::create([
+                    'DespachoLogId'         => $item["dispatchLogId"],
+                    'ProductoId'            => $productId,
+                    'Cantidad'              => $item["qty"],
+                    'Fecha'                 => date('Y-m-d'),
+                    'Tipo'                  => 'A',
+                    'RequisicionDetalleId'  => $item["detailIdRequisition"]
+
+                ]);
+            }
             $outputMovement = 'S';
             $trayId = $parseFoundLocation->id;
             $wareHouseId = $parseFoundLocation->forniture->AlmacenId;
-            /**
-             *  ?   UsuariodId debe ser un id de la tabla segur, pero en la app se inicia con un operario?
-             *  ?   TIpoOrigen char4 que tipo origen es para los movimientos desde la app
-             *  ?   NUmeroOrigen para los movimientos de pciking
-             *  ?   Que estado debe ser null o vacio ?
-             *
-             *
-             */
-
-
-
-            /* INSERT LOG DISPATCH */
-            VerificaDespachoLog::create([
-                'DespachoLogId' => $dispatchLogId,
-                'ProductoId' => $productId,
-                'Cantidad' => $qty,
-                'Fecha' => date('Y-m-d')
-            ]);
 
             MoviUbicacion::create([
                 'Fecha' => date('Y-m-d'),
@@ -126,8 +140,7 @@ class InveUbicacionController extends Controller
                 'ProductoId' => $productId,
                 'Cantidad' => $qty,
                 'FechaRegistro' => now(),
-                'AlmacenId' => $wareHouseId
-
+                'AlmacenId' => $wareHouseId,
             ]);
 
             DB::commit();
@@ -165,12 +178,41 @@ class InveUbicacionController extends Controller
             $user = (object) $request->get('userAuth');
 
             $result = InveUbicacion::withFilteredProductsAndLocations($filterText)
-            ->withProduct()
+            ->WithPictureProduct()
             ->withTray()
             ->get();
             return response()->json($result,200);
         }catch(Throwable $th){
 
+        }
+    }
+
+    private function getDispatchToGroupRequisitions($idGroupRequisitions=[],$dispatchLogId,$qtyRequest){
+        try{
+            $result = [
+                "success"   => true,
+                "data"      => []
+            ];
+            $isGroupRequisition = count($idGroupRequisitions) > 1;
+            if($isGroupRequisition){
+                /*
+                TODO: ORDERNAR POR PRIORIDAD LAS REQUISICIONES Y TOMAR EL PRIMERO, SI YA TIENE LAS CANTIDADES NECESARIAS EN VERIFICADESPACHOSLOGS TOMAR EL SIGUIENTE
+                TODO: SI AGRUPAOD EL DESPACHOLOG ID ES OTRO RECUPERARLO
+                */
+            }else{
+                $result['data'][]=[
+                    "dispatchLogId"         => $dispatchLogId,
+                    "detailIdRequisition"   => $idGroupRequisitions[0],
+                    "qty"                   => $qtyRequest
+                ];
+            }
+
+            return $result;
+        }catch(Throwable $th){
+            return [
+                'success'   => false,
+                'message'   => $th,
+            ];
         }
     }
 }
