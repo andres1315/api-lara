@@ -101,6 +101,20 @@ class HeadRequ extends Model
 
   }
 
+  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id)
+  {
+   return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+   ->where('HeadRequ.Estado', '!=', 'NU')
+   ->where('HeadRequ.Aprobada','S')
+   ->where('DespachoLog.OperarioIdAli',$user_id)
+   ->where('DespachoLog.Estado','A')
+   ->whereNull('DespachoLog.Alistamientofin')
+   ->whereNotNull('DespachoLog.GrupoRq')
+   ->select('HeadRequ.*')
+   ->orderBy('HeadRequ.Prioridad', 'asc');
+  }
+
+
 
   public function toArray()
   {

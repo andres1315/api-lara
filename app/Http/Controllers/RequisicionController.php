@@ -17,11 +17,10 @@ class RequisicionController extends Controller
         $user = (object) $request->get('userAuth');
 
         $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)->withRelations()->get();
-        $requisitionArray = $requisitions->map(function ($requisition) {
-            return $requisition->toArray();
-        });
+    
+        $requisitionGroup = HeadRequ::ApprovedAndAssignedGroup($user->operarioid)->get();
 
-        return response()->json(['requisition' => $requisitionArray]);
+        return response()->json(['requisition' => $requisitionGroup]);
     }
 
     public function show(string $id, Request $request)
@@ -132,5 +131,9 @@ class RequisicionController extends Controller
         }
 
 
+    }
+
+    private function getDetailRequisitionGroup(){
+        
     }
 }
