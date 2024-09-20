@@ -6,6 +6,7 @@ use App\Models\DespachoLog;
 use App\Models\HeadRequ;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class RequisicionController extends Controller
@@ -63,5 +64,73 @@ class RequisicionController extends Controller
             $response['message']= $th->getMessage();
             return response()->json($response,$response['status']);
         }
+    }
+
+    public function createGroupRequisition(Request $request){
+        /*
+        ? SE PUEDE AGRUPAR SI LA RQ YA TIENE AVANCE
+
+        */
+
+
+        $messageValidator = [
+            'requisitionToGroup.required'   => 'requisitionToGroup es Requerido'
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'requisitionToGroup' => 'required'
+        ],$messageValidator);
+
+        if ($validator->fails()) {
+            $response['message'] =$validator->errors();
+            $response['success'] =false;
+            $response['status'] =400;
+            return  response()->json($response, 400);
+        }
+        $user = (object) $request->get('userAuth');
+        $ids_requisitions= $request->input('requisitionToGroup');
+        $requisitionFreeToGroup = HeadRequ::ApprovedAndAssigned($user->operarioid)->whereIn('HeadRequ.RequisicionId',$ids_requisitions)->get();
+        $arratnew=[];
+        if($requisitionFreeToGroup->count() != count($ids_requisitions)){
+            $response =[
+                'success'   => false,
+                'message'   => "Las requisiciones ".implode(',',$ids_requisitions)." no puede agregarse a un grupo",
+                'status'    => 400
+            ];
+            
+
+            if($requisitionFreeToGroup->count()==0)return response()->json($response,400);
+            $filtersRequ = array_column(array_filter($requisitionFreeToGroup->toArray(), function($rq) use ($ids_requisitions){
+                return in_array($rq['id'],$ids_requisitions);
+            }),'id');
+            
+            $response['message'] = "Las requisiciones ".implode(',',$filtersRequ)." no puede agregarse a un grupo";
+            return response()->json($response,400);
+            
+        }
+
+
+        $dispatchLog = DespachoLog::whereIn('RequisicionId',$ids_requisitions)->get();
+        DB::beginTransaction();
+        try{
+
+            foreach ($dispatchLog as $key => $dispatch) {
+                $dispatch->GrupoRq =$ids_requisitions[0];
+                
+                $dispatch->save();
+            }
+            DB::commit();
+            return response()->json(["group"=>$dispatchLog],200);
+        }catch(Throwable $th){
+            DB::rollback();
+            $response=[
+                "success"   => false,
+                "message"   => $th->getMessage(),
+            ];
+            return response()->json($response,400);
+
+        }
+
+
     }
 }

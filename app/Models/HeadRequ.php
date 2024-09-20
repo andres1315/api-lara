@@ -55,6 +55,7 @@ class HeadRequ extends Model
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
+   ->whereNull('DespachoLog.GrupoRq')
    ->select('HeadRequ.*')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
