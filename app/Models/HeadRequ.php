@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class HeadRequ extends Model
 {
@@ -47,9 +48,10 @@ class HeadRequ extends Model
   }
 
 
-  public function scopeApprovedAndAssigned(Builder $query,$user_id)
+  public function scopeApprovedAndAssigned(Builder $query,$user_id,$warehouseId)
   {
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+    ->where('HeadRequ.BodegaId',$warehouseId)
    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
@@ -70,7 +72,7 @@ class HeadRequ extends Model
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', 'warehouse', 'dependency'];
+    $relations = ['userRequest', /* 'warehouse', 'dependency' */];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -78,9 +80,15 @@ class HeadRequ extends Model
   public function scopeWithDetailRequisition(Builder $query){
     $relations = ['requDetail'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
+    return $query->with($relations);
+  }
 
-
-    return $query->with(['requDetail']);
+  public function scopeWithDetailRequisitionGroup(Builder $query){
+    $relations = ['requDetail'];
+    static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
+    return $query->with(['requDetail'=> function($query){
+        $query->groupedProducts();
+    }]);
   }
 
 
@@ -101,16 +109,17 @@ class HeadRequ extends Model
 
   }
 
-  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id)
+  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id,$warehouseId)
   {
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+   ->where('HeadRequ.BodegaId',$warehouseId)
    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
    ->whereNotNull('DespachoLog.GrupoRq')
-   ->select('HeadRequ.*')
+   ->select('HeadRequ.*', 'DespachoLog.GrupoRq')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -127,20 +136,14 @@ class HeadRequ extends Model
     ];
 
     $serializeData = [
-      'id'                  => $array['RequisicionId'],
-      'consecutive'         => $array['ConseRequi'],
-      'type'                => $array['Tipo'],
+      'id'                  => [$array['RequisicionId']],
+      'consecutive'         => [$array['ConseRequi']],
       'date'                => $array['Fecha'],
-      'digitDate'           => $array['FechaDigit'],
-      'storeId'             => $array['AlmacenId'],
-      'userRequestId'       => $array['SolicitanteId'],
-      'dependencyId'        => $array['DependenciaId'],
       'warehouseId'         => $array['BodegaId'],
       'approvalDate'        => $array['FechaAprobacion'],
       'approved'            => $array['Aprobada'],
-      'incidenceId'         => $array['IncidenciaId'],
-      'special'             => $array['Especial'],
       'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
+      'groupRQ'             =>  $array['GrupoRq'] ?? null,
     ];
 
 

@@ -16,18 +16,17 @@ class RequisicionController extends Controller
     {
         $user = (object) $request->get('userAuth');
 
-        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)->withRelations()->get();
-    
-        $requisitionGroup = HeadRequ::ApprovedAndAssignedGroup($user->operarioid)->get();
+        $requisitionsGroup = $this->getRequisitionGroup(HeadRequ::ApprovedAndAssignedGroup($user->operarioid,$user->warehouseId)->get()->toArray());
+        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid,$user->warehouseId)->get()->toArray();
+        $allRequisitions= array_merge($requisitionsGroup,$requisitions);
 
-        return response()->json(['requisition' => $requisitionGroup]);
+        return response()->json(['requisition' => $allRequisitions]);
     }
 
     public function show(string $id, Request $request)
     {
         $user = (object) $request->get('userAuth');
-        $requisition = HeadRequ::ApprovedAndAssigned($user->operarioid)
-            ->withRelations()
+        $requisition = HeadRequ::ApprovedAndAssigned($user->operarioid,$user->warehouseId)
             ->withDetailRequisition()
             ->withDispatchLogDetail()
             ->where('HeadRequ.RequisicionId', $id)
@@ -66,12 +65,6 @@ class RequisicionController extends Controller
     }
 
     public function createGroupRequisition(Request $request){
-        /*
-        ? SE PUEDE AGRUPAR SI LA RQ YA TIENE AVANCE
-
-        */
-
-
         $messageValidator = [
             'requisitionToGroup.required'   => 'requisitionToGroup es Requerido'
         ];
@@ -89,23 +82,22 @@ class RequisicionController extends Controller
         $user = (object) $request->get('userAuth');
         $ids_requisitions= $request->input('requisitionToGroup');
         $requisitionFreeToGroup = HeadRequ::ApprovedAndAssigned($user->operarioid)->whereIn('HeadRequ.RequisicionId',$ids_requisitions)->get();
-        $arratnew=[];
         if($requisitionFreeToGroup->count() != count($ids_requisitions)){
             $response =[
                 'success'   => false,
                 'message'   => "Las requisiciones ".implode(',',$ids_requisitions)." no puede agregarse a un grupo",
                 'status'    => 400
             ];
-            
 
-            if($requisitionFreeToGroup->count()==0)return response()->json($response,400);
+
+            if($requisitionFreeToGroup->count()==0) return response()->json($response,400);
             $filtersRequ = array_column(array_filter($requisitionFreeToGroup->toArray(), function($rq) use ($ids_requisitions){
                 return in_array($rq['id'],$ids_requisitions);
             }),'id');
-            
+
             $response['message'] = "Las requisiciones ".implode(',',$filtersRequ)." no puede agregarse a un grupo";
             return response()->json($response,400);
-            
+
         }
 
 
@@ -115,7 +107,7 @@ class RequisicionController extends Controller
 
             foreach ($dispatchLog as $key => $dispatch) {
                 $dispatch->GrupoRq =$ids_requisitions[0];
-                
+
                 $dispatch->save();
             }
             DB::commit();
@@ -133,7 +125,91 @@ class RequisicionController extends Controller
 
     }
 
-    private function getDetailRequisitionGroup(){
-        
+    private function getRequisitionGroup($requisitionOnGroup){
+
+        $newGroups = [];
+        foreach ($requisitionOnGroup as $key => $requisition) {
+            if(array_key_exists($requisition['groupRQ'],$newGroups)){
+                $newGroups[$requisition['groupRQ']]['id'][]=$requisition['id'][0];
+                $newGroups[$requisition['groupRQ']]['consecutive'][]=$requisition['consecutive'][0];
+            }else{
+                $newGroups[$requisition['groupRQ']]=$requisition;
+            }
+        }
+        return $newGroups;
+    }
+
+
+    public function detailGroup(Request $request)
+    {
+        $messageValidator = [
+            'ids.required'   => 'ids es Requerido'
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'ids' => 'required|array',         // Debe ser un array
+            'ids.*' => 'required|integer',     // Cada elemento debe ser un número entero
+        ],$messageValidator);
+
+        if ($validator->fails()) {
+            $response['message'] =$validator->errors();
+            $response['success'] =false;
+            $response['status'] =400;
+            return  response()->json($response, 400);
+        }
+
+        $ids = $validator->validated()['ids'];
+
+
+        $user = (object) $request->get('userAuth');
+        $requisition = HeadRequ::ApprovedAndAssignedGroup($user->operarioid,$user->warehouseId)
+            ->withDetailRequisition()
+            ->withDispatchLogDetail()
+            ->whereIn('HeadRequ.RequisicionId', $ids)
+            ->get();
+
+         // Agrupar los detalles de las requisiciones manualmente
+            $groupedProducts = $requisition->flatMap(function ($req) use($user){
+                foreach($req->requDetail as $requisitionDetail){
+                    $requisitionDetail->withSuggestedLocationProducts($user->warehouseId);
+                }
+                return $req->requDetail;
+            })->groupBy(function ($item) {
+                return $item->ProductoId . '-' . $item->PresentacionId . '-' . $item->Factor; // Agrupa por los campos que necesites
+            })->map(function ($group,$index) {
+                /* $detailRequisition =[];
+                foreach($group as $key => $groupRq){
+                    $arrGroupRq=$groupRq->toArray();
+                    if(array_key_exists($index,$detailRequisition)){
+                        $detailRequisition[$index]['id'][]=$arrGroupRq['id'];
+                        $detailRequisition[$index]['requisitionId'][]=$arrGroupRq['requisitionId'];
+                    }else{
+                        $detailRequisition[$index]=[
+                            ...$arrGroupRq,
+                            'id' => [$arrGroupRq['id']],
+                            'requisitionId' => [$arrGroupRq['requisitionId']],
+                            'approved' => $group->sum('Aprobados'), // Suma Aprobados
+                        ];
+                    }
+                }
+                return array_values($detailRequisition); */
+                return $group->reduce(function ($carry, $item) {
+
+                    $carry['id'][] = $item->Id;
+                    $carry['requisitionId'][] = $item->RequisicionId;
+                    $carry['approved'] = ($carry['approved'] ?? 0) + $item->Aprobados; // Suma Aprobados
+                    return $carry;
+                }, [
+                    ...$group->first()->toArray(),
+                    'productId' => $group->first()->ProductoId,
+                    'presentationId' => $group->first()->PresentacionId,
+                    'factor' => $group->first()->Factor,
+                    'id' => [],
+                    'requisitionId' => [],
+                    'approved' => 0,
+                ]);
+            })->values();
+
+        return response()->json(['requisitionData' => $groupedProducts]);
     }
 }

@@ -43,6 +43,16 @@ class Requisicion extends Model
     }]);
   }
 
+
+  public function scopeGroupedProducts(Builder $query)
+  {
+    return $query->select('ProductoId', 'PresentacionId', 'Factor')
+    ->selectRaw('SUM(Aprobados) as Aprobados')
+    ->groupBy('ProductoId', 'PresentacionId', 'Factor');
+
+  }
+
+
   public function toArray()
   {
     $array = parent::toArray();
@@ -52,27 +62,27 @@ class Requisicion extends Model
       'id'                  => $array['Id'],
       'requisitionId'       => $array['RequisicionId'],
       'productId'           => $array['ProductoId'],
-      'cost'                => $array['Costo'],
+/*       'cost'                => $array['Costo'],
       'qty'                 => $array['Cantidad'],
       'iva'                 => $array['Iva'],
-      'ivaId'               => $array['IvaId'],
+      'ivaId'               => $array['IvaId'], */
       'approved'            => $array['Aprobados'],
-      'approvedDate'        => $array['FechaAprob'],
+ /*      'approvedDate'        => $array['FechaAprob'],
       'userAprrovedId'      => $array['AprobadorId'],
       'received'            => $array['Recibidos'],
       'noPending'           => $array['NoPendiente'],
       'observationProduct'  => trim($array['ObserProdu']),
       'productRequest'      => $array['ProduSolic'],
       'qtyRequest'          => $array['CantiSolic'],
-      'typeEndId'           => $array['TipoFinalizacionId'],
+      'typeEndId'           => $array['TipoFinalizacionId'], */
       'presentationId'      => $array['PresentacionId'],
       'factor'              => $array['Factor'],
-      'deliveryDate'        => $array['FechaEntrega'],
+    /*   'deliveryDate'        => $array['FechaEntrega'],
       'endDate'             => $array['FechaFinal'],
       'userFId'             => $array['UsuarioFId'],
       'storeOCId'           => $array['AlmacenIdOC'],
       'purchaseOrder'       => $array['OrdenCompr'],
-      'incidencePId'        => $array['IncidenciaIdP'],
+      'incidencePId'        => $array['IncidenciaIdP'], */
       'productDetail'       => $this->product
 
     ];
