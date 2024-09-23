@@ -30,6 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware(['auth-custom'])
             ->prefix('/api/invlocation')
             ->group(base_path('routes/inventoryLocation.php'));
+            Route::middleware(['auth-custom'])
+            ->prefix('/api/newsdispatch')
+            ->group(base_path('routes/newsDispatch.php'));
 
             Route::match(['get', 'post', 'put', 'delete'], '/{any}', function () {
                 return response()->view('errors.404', [], 404);

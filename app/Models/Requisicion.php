@@ -23,21 +23,25 @@ class Requisicion extends Model
 
   public function product(): HasOne
   {
-    return $this->HasOne(Producto::class, 'productoid', 'ProductoId');
-
+     $relation =$this->HasOne(Producto::class, 'productoid', 'ProductoId')->withPictureProduct();
+    return $relation;
   }
 
-  public function scopeWithProductLocations(Builder $query, $includeLocations = false)
-{
-    $query->when($includeLocations, function ($query) {
-        $query->with(['product' => function ($query) {
-            $query->withSuggestedLocation();
-        }]);
-    });
 
-    return $query;
-}
 
+  public function applyPresentationFilter(){
+    return $this->load(['product' => function($query){
+      $query->withPresentation($this->PresentacionId);
+    }]);
+  }
+
+
+  public function scopeWithSuggestedLocationProducts(Builder $query,$warehouseRq=null){
+
+    return $this->load(['product' => function($query) use($warehouseRq){
+      $query->withMainSuggestedLocation($warehouseRq);
+    }]);
+  }
 
   public function toArray()
   {

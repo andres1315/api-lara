@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UbicacionBandeja extends Model
 {
@@ -15,12 +16,12 @@ class UbicacionBandeja extends Model
     public $timestamps = false;
 
     public function scopeIsActive(Builder $query){
-        return $query->join('UbicacionMueble','UbicacionMueble.MuebleId','=','UbicacionBandeja.MuebleId')
-        ->where('UbicacionBandeja.Estado', 'A')
-        ->where('UbicacionMueble.Estado', 'A')
-        ->select('UbicacionBandeja.*','UbicacionMueble.AlmacenId');
+        return $query->where('Estado', 'A');
     }
 
+    public function forniture(): BelongsTo{
+        return $this->belongsTo(UbicacionMueble::class,'MuebleId','MuebleId');
+    }
     public function toArray()
     {
         $array = parent::toArray();
@@ -31,8 +32,7 @@ class UbicacionBandeja extends Model
             'state'               => $array['Estado'],
             'blockInventorySell'  => $array['BloqueaInventarioVentas'],
             'barCode'             => $array['Barras'],
-            'capacity'            => $array['Capacidad'],
-            'warehouseId'         => @$array['AlmacenId'],
+            'forniture'           => $this->forniture
 
         ];
 

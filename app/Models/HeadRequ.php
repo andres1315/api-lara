@@ -20,7 +20,7 @@ class HeadRequ extends Model
 
   public function requDetail(): HasMany
   {
-    return $this->hasMany(Requisicion::class, 'RequisicionId', 'RequisicionId');
+    return $this->hasMany(Requisicion::class, 'RequisicionId', 'RequisicionId')->where('Requisicion.NoPendiente','=',0);
   }
   public function userRequest(): HasOne
   {
@@ -54,28 +54,23 @@ class HeadRequ extends Model
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
+   ->whereNull('DespachoLog.Alistamientofin')
+   ->whereNull('DespachoLog.GrupoRq')
    ->select('HeadRequ.*')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
 
   public function scopeWithDispatchLog(Builder $query){
-
-
     $relations = ['dispatchLog'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
-
-
-
   }
-
-
 
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', 'store', 'warehouse', 'dependency'];
+    $relations = ['userRequest', 'warehouse', 'dependency'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -83,15 +78,9 @@ class HeadRequ extends Model
   public function scopeWithDetailRequisition(Builder $query){
     $relations = ['requDetail'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
-    return $query->with([
-        'requDetail' => function ($query) {
-            $query->with([
-                'product' => function ($query) {
-                    $query->withSuggestedLocation()->withPresentation();
-                }
-            ]);
-        }
-    ]);
+
+
+    return $query->with(['requDetail']);
   }
 
 
@@ -111,6 +100,20 @@ class HeadRequ extends Model
 
 
   }
+
+  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id)
+  {
+   return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+   ->where('HeadRequ.Estado', '!=', 'NU')
+   ->where('HeadRequ.Aprobada','S')
+   ->where('DespachoLog.OperarioIdAli',$user_id)
+   ->where('DespachoLog.Estado','A')
+   ->whereNull('DespachoLog.Alistamientofin')
+   ->whereNotNull('DespachoLog.GrupoRq')
+   ->select('HeadRequ.*')
+   ->orderBy('HeadRequ.Prioridad', 'asc');
+  }
+
 
 
   public function toArray()
@@ -146,7 +149,7 @@ class HeadRequ extends Model
         $serializeData[$relation] = $this->$relation;
       }
     }
-    
+
 
 
     return $serializeData;
