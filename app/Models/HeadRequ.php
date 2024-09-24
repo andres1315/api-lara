@@ -72,7 +72,7 @@ class HeadRequ extends Model
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', /* 'warehouse', 'dependency' */];
+    $relations = ['userRequest', 'warehouse', /* 'dependency' */];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -122,6 +122,20 @@ class HeadRequ extends Model
    ->select('HeadRequ.*', 'DespachoLog.GrupoRq')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
+
+  public function scopeRequisitionDetailById(Builder $query, array $idsDetailRequisition)
+  {
+   return $query->join('Requisicion','Requisicion.RequisicionId','=','HeadRequ.RequisicionId')
+   ->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+   ->where('HeadRequ.Estado', '!=', 'NU')
+   ->where('HeadRequ.Aprobada','S')
+   ->where('Requisicion.NoPendiente',0)
+   ->whereIn('Requisicion.id',$idsDetailRequisition)
+   ->whereNotNull('DespachoLog.GrupoRq')
+   ->select('Requisicion.id as detailRequisitionId','Requisicion.RequisicionId','Requisicion.Aprobados as approved','Requisicion.ProductoId','Requisicion.Factor','Requisicion.PresentacionId','DespachoLog.Id as dispatchLogId')
+   ->orderBy('HeadRequ.Prioridad', 'asc');
+  }
+
 
 
 

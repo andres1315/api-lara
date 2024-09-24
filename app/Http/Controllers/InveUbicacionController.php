@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\NewQtyProducLocationRequest;
 use App\Models\DespachoLog;
+use App\Models\HeadRequ;
 use App\Models\InveUbicacion;
 use App\Models\MoviUbicacion;
 use App\Models\UbicacionBandeja;
@@ -12,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Ramsey\Uuid\Type\Integer;
 use Throwable;
 
 class InveUbicacionController extends Controller
@@ -187,7 +189,7 @@ class InveUbicacionController extends Controller
         }
     }
 
-    private function getDispatchToGroupRequisitions($idGroupRequisitions=[],$dispatchLogId,$qtyRequest){
+    private function getDispatchToGroupRequisitions(array $idGroupRequisitions=[],array $dispatchLogId=[], int $qtyRequest){
         try{
             $result = [
                 "success"   => true,
@@ -196,12 +198,37 @@ class InveUbicacionController extends Controller
             $isGroupRequisition = count($idGroupRequisitions) > 1;
             if($isGroupRequisition){
                 /*
-                TODO: ORDERNAR POR PRIORIDAD LAS REQUISICIONES Y TOMAR EL PRIMERO, SI YA TIENE LAS CANTIDADES NECESARIAS EN VERIFICADESPACHOSLOGS TOMAR EL SIGUIENTE
-                TODO: SI AGRUPAOD EL DESPACHOLOG ID ES OTRO RECUPERARLO
+                TODO: ORDERNAR POR PRIORIDAD LAS REQUISICIONES Y TOMAR EL PRIMERO, CON SU CANTIDAD APROBADA
+                TODO: SUMAR EN VERIFICADESPACHOLOG LAS CANTIDADES PICKEADAS PARA ESTE DETALLERQ ID SI YA TIENE LAS CANTIDADES NECESARIAS  TOMAR EL SIGUIENTE
+                TODO: SI EL ANTERIO YA TIENE SU UNIDADES PICKEADAS AGREGAR LAS UNIDADES AL SIGUIENTE EN ORDEN DE PRIORIDAD
                 */
+                $restQtyRequest = $qtyRequest;
+                $requisition = HeadRequ::RequisitionDetailById($idGroupRequisitions)->get();
+
+                foreach ($requisition as  $detail) {
+                    $qtyPicking = DB::table('VerificaDespachoLog')
+                    ->where('RequisicionDetalleId', $detail->detailRequisitionId)
+                    ->sum('Cantidad');
+
+                    $detail->qtyPicking = $qtyPicking;
+
+                    if($detail->qtyPicking < $detail->approved && $restQtyRequest > 0){
+                        $remainingQty= floatval($detail->approved) - floatval($detail->qtyPicking);
+                        $qtyToMinus = $restQtyRequest <= $remainingQty ? $restQtyRequest : $remainingQty;
+                        $result['data'][]=[
+                            "dispatchLogId"         => $detail->dispatchLogId,
+                            "detailIdRequisition"   => $detail->detailRequisitionId,
+                            "qty"                   => $qtyToMinus
+                        ];
+                        $restQtyRequest -= $qtyToMinus;
+
+                    }
+                }
+
+
             }else{
                 $result['data'][]=[
-                    "dispatchLogId"         => $dispatchLogId,
+                    "dispatchLogId"         => $dispatchLogId[0],
                     "detailIdRequisition"   => $idGroupRequisitions[0],
                     "qty"                   => $qtyRequest
                 ];
