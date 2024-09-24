@@ -14,6 +14,8 @@ class VerificaDespachoLog extends Model
     public $timestamps = false;
 
 
+
+
     public function toArray()
   {
     $array = parent::toArray();

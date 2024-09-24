@@ -143,6 +143,7 @@ class InveUbicacionController extends Controller
                 'Cantidad' => $qty,
                 'FechaRegistro' => now(),
                 'AlmacenId' => $wareHouseId,
+                'OperarioId' => $user->operarioid,
             ]);
 
             DB::commit();
