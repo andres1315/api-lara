@@ -198,11 +198,6 @@ class InveUbicacionController extends Controller
             ];
             $isGroupRequisition = count($idGroupRequisitions) > 1;
             if($isGroupRequisition){
-                /*
-                TODO: ORDERNAR POR PRIORIDAD LAS REQUISICIONES Y TOMAR EL PRIMERO, CON SU CANTIDAD APROBADA
-                TODO: SUMAR EN VERIFICADESPACHOLOG LAS CANTIDADES PICKEADAS PARA ESTE DETALLERQ ID SI YA TIENE LAS CANTIDADES NECESARIAS  TOMAR EL SIGUIENTE
-                TODO: SI EL ANTERIO YA TIENE SU UNIDADES PICKEADAS AGREGAR LAS UNIDADES AL SIGUIENTE EN ORDEN DE PRIORIDAD
-                */
                 $restQtyRequest = $qtyRequest;
                 $requisition = HeadRequ::RequisitionDetailById($idGroupRequisitions)->get();
 
