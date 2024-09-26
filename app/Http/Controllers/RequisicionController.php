@@ -16,10 +16,12 @@ class RequisicionController extends Controller
         $user = (object) $request->get('userAuth');
         $requisitionsGroup = $this->getRequisitionGroup(
             HeadRequ::ApprovedAndAssignedGroup($user->operarioid, $user->warehouseId)
+            ->withRelations()
             ->get()
             ->toArray()
         );
         $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid, $user->warehouseId)
+        ->withRelations()
         ->get()
         ->toArray();
         $allRequisitions = array_merge($requisitionsGroup, $requisitions);
@@ -42,19 +44,42 @@ class RequisicionController extends Controller
     }
 
 
-    public function toFinishRequisition(Request $request, string $id)
+    public function toFinishRequisition(Request $request)
     {
+        $messageValidator = [
+            'ids.required' => 'ids es Requerido',
+            'ids.array' => 'El campo "ids" debe ser un array.',
+            'ids.*.required' => 'Cada elemento de "ids" es obligatorio.',
+            'ids.*.integer' => 'Cada elemento de "ids" debe ser un número entero.',
+
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'ids' => 'required|array',         // Debe ser un array
+            'ids.*' => 'required|integer',     // Cada elemento debe ser un número entero
+        ], $messageValidator);
+
+        if ($validator->fails()) {
+            $response['message'] = $validator->errors();
+            $response['success'] = false;
+            $response['status'] = 400;
+            return response()->json($response, 400);
+        }
+
+        $ids = $validator->validated()['ids'];
+
         DB::beginTransaction();
         $response = [
             'message' => 'success',
             'status' => 200
         ];
         try {
-            $dispatchLog = DespachoLog::find($id);
+            DespachoLog::whereIn('Id',$ids)->update(['AlistamientoFin'=> now()]);
+            /* dd($dispatchLog);
             if ($dispatchLog->Id) {
                 $dispatchLog->AlistamientoFin = now();
                 $dispatchLog->save();
-            }
+            } */
             DB::commit();
             return response()->json($response, $response['status']);
 
@@ -184,11 +209,13 @@ class RequisicionController extends Controller
         $groupRequ->approved = $requisition->first()->Aprobada;
         $groupRequ->priority = $requisition->first()->Prioridad;
         $groupRequ->groupRQ = $requisition->first()->GrupoRq;
+        $groupRequ->basketCode = [];
 
         $requisition->each(function ($headRequ) use ($groupRequ) {
             $groupRequ->id[] = $headRequ['RequisicionId'];
             $groupRequ->consecutive[] = $headRequ['ConseRequi'];
             $groupRequ->dispatchLog[] = $headRequ['dispatchLog'];
+            $headRequ['CodigoCanasta'] && ($groupRequ->basketCode[] = $headRequ['CodigoCanasta']);
         });
 
         $groupRequ->requDetail = $requisition->flatMap(function ($req) use ($user) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Priority;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -72,7 +73,7 @@ class HeadRequ extends Model
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', 'warehouse', /* 'dependency' */];
+    $relations = ['warehouse'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -143,11 +144,7 @@ class HeadRequ extends Model
   {
     $array = parent::toArray();
 
-    $priorityName = [
-      1 => 'Urgente',
-      2 => 'Medio',
-      3 => 'Normal',
-    ];
+
 
     $serializeData = [
       'id'                  => [$array['RequisicionId']],
@@ -156,8 +153,9 @@ class HeadRequ extends Model
       'warehouseId'         => $array['BodegaId'],
       'approvalDate'        => $array['FechaAprobacion'],
       'approved'            => $array['Aprobada'],
-      'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
+      'priority'            => ['id' => (int) $array['Prioridad'], 'text' => Priority::from($array['Prioridad'])->name],  // 3->normal, 2->medio, 1->urgente
       'groupRQ'             =>  $array['GrupoRq'] ?? null,
+      'basketCode'          => ( $array['CodigoCanasta']?? false) ? [$array['CodigoCanasta']] : null,
     ];
 
 

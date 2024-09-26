@@ -91,8 +91,12 @@ class InveUbicacionController extends Controller
 
             /* UPDATE QTY INVENTORY ON LOCATION */
             $newQtyInventory = ($foundProductOnLocation->InvenActua - $qty);
-            $foundProductOnLocation->InvenActua = $newQtyInventory;
-            $foundProductOnLocation->save();
+            if($newQtyInventory == 0){
+                $foundProductOnLocation->delete();
+            }else{
+                $foundProductOnLocation->InvenActua = $newQtyInventory;
+                $foundProductOnLocation->save();
+            }
 
 
 
@@ -130,21 +134,22 @@ class InveUbicacionController extends Controller
                     'RequisicionDetalleId'  => $item["detailIdRequisition"]
 
                 ]);
-            }
-            $outputMovement = 'S';
-            $trayId = $parseFoundLocation->id;
-            $wareHouseId = $parseFoundLocation->forniture->AlmacenId;
 
-            MoviUbicacion::create([
-                'Fecha' => date('Y-m-d'),
-                'TipoMovimiento' => $outputMovement,
-                'BandejaId' => $trayId,
-                'ProductoId' => $productId,
-                'Cantidad' => $qty,
-                'FechaRegistro' => now(),
-                'AlmacenId' => $wareHouseId,
-                'OperarioId' => $user->operarioid,
-            ]);
+                $outputMovement = 'S';
+                $trayId = $parseFoundLocation->id;
+                $wareHouseId = $parseFoundLocation->forniture->AlmacenId;
+
+                MoviUbicacion::create([
+                    'Fecha' => date('Y-m-d'),
+                    'TipoMovimiento' => $outputMovement,
+                    'BandejaId' => $trayId,
+                    'ProductoId' => $productId,
+                    'Cantidad' => $item["qty"],
+                    'FechaRegistro' => now(),
+                    'AlmacenId' => $wareHouseId,
+                    'OperarioId' => $user->operarioid,
+                ]);
+            }
 
             DB::commit();
 
