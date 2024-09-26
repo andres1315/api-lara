@@ -15,12 +15,12 @@ class RequisicionController extends Controller
     {
         $user = (object) $request->get('userAuth');
         $requisitionsGroup = $this->getRequisitionGroup(
-            HeadRequ::ApprovedAndAssignedGroup($user->operarioid, $user->warehouseId)
+            HeadRequ::ApprovedAndAssignedGroup($user->operarioid)
             ->withRelations()
             ->get()
             ->toArray()
         );
-        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid, $user->warehouseId)
+        $requisitions = HeadRequ::ApprovedAndAssigned($user->operarioid)
         ->withRelations()
         ->get()
         ->toArray();
@@ -31,7 +31,7 @@ class RequisicionController extends Controller
     public function show(string $id, Request $request)
     {
         $user = (object) $request->get('userAuth');
-        $requisition = HeadRequ::ApprovedAndAssigned($user->operarioid, $user->warehouseId)
+        $requisition = HeadRequ::ApprovedAndAssigned($user->operarioid)
             ->withDetailRequisition()
             ->withDispatchLogDetail()
             ->where('HeadRequ.RequisicionId', $id)
@@ -111,21 +111,23 @@ class RequisicionController extends Controller
         $ids_requisitions = $request->input('requisitionToGroup');
         $requisitionFreeToGroup = HeadRequ::ApprovedAndAssigned($user->operarioid)
         ->whereIn('HeadRequ.RequisicionId', $ids_requisitions)
+        ->whereNull('DespachoLog.AlistamientoInicio')
         ->get();
-
         if ($requisitionFreeToGroup->count() != count($ids_requisitions)) {
             $response = [
                 'success' => false,
-                'message' => "Las requisiciones " . implode(',', $ids_requisitions) . " no puede agregarse a un grupo",
+                'message' => "Las requisiciones " . implode(',', $ids_requisitions) . " no pueden agregarse a un grupo",
                 'status' => 400
             ];
-            if ($requisitionFreeToGroup->count() == 0)
-                return response()->json($response, 400);
-            $filtersRequ = array_column(array_filter($requisitionFreeToGroup->toArray(), function ($rq) use ($ids_requisitions) {
-                return in_array($rq['id'], $ids_requisitions);
-            }), 'id');
+            if ($requisitionFreeToGroup->count() == 0) return response()->json($response, 400);
+            $idsRequisitionsFreeToGroup  =array_merge(...array_column($requisitionFreeToGroup->toArray(),'id'));
+            $idsRequisitionsNoFreeToGroup  = array_diff($ids_requisitions,$idsRequisitionsFreeToGroup);
 
-            $response['message'] = "Las requisiciones " . implode(',', $filtersRequ) . " no puede agregarse a un grupo";
+
+
+
+
+            $response['message'] = "Las requisiciones " . implode(',', $idsRequisitionsNoFreeToGroup) . " no pueden agregarse a un grupo, ya han sido iniciados o pertenecen a otro grupo";
             return response()->json($response, 400);
 
         }
@@ -196,7 +198,7 @@ class RequisicionController extends Controller
 
 
         $user = (object) $request->get('userAuth');
-        $requisition = HeadRequ::ApprovedAndAssignedGroup($user->operarioid, $user->warehouseId)
+        $requisition = HeadRequ::ApprovedAndAssignedGroup($user->operarioid)
             ->withDetailRequisition()
             ->withDispatchLogDetail()
             ->whereIn('HeadRequ.RequisicionId', $ids)

@@ -49,11 +49,14 @@ class HeadRequ extends Model
   }
 
 
-  public function scopeApprovedAndAssigned(Builder $query,$user_id,$warehouseId)
+  public function scopeApprovedAndAssigned(Builder $query,$user_id)
   {
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
-    ->where('HeadRequ.BodegaId',$warehouseId)
-   ->where('HeadRequ.Estado', '!=', 'NU')
+    ->join('Operario',function($join){
+        $join->on('DespachoLog.OperarioIdAli','=','Operario.Operarioid')
+        ->whereColumn('HeadRequ.BodegaId','=','Operario.AlmacenId');
+    })
+    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
@@ -110,10 +113,13 @@ class HeadRequ extends Model
 
   }
 
-  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id,$warehouseId)
+  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id)
   {
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
-   ->where('HeadRequ.BodegaId',$warehouseId)
+   ->join('Operario',function($join){
+        $join->on('DespachoLog.OperarioIdAli','=','Operario.Operarioid')
+        ->whereColumn('HeadRequ.BodegaId','=','Operario.AlmacenId');
+    })
    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)

@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\NewQtyProducLocationRequest;
 use App\Models\DespachoLog;
+use App\Models\HeadMovi;
 use App\Models\HeadRequ;
+use App\Models\InveProd;
 use App\Models\InveUbicacion;
+use App\Models\Movimi;
 use App\Models\MoviUbicacion;
 use App\Models\UbicacionBandeja;
 use App\Models\VerificaDespachoLog;
-use Carbon\Carbon;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Ramsey\Uuid\Type\Integer;
+
 use Throwable;
+use App\Http\Resources\InveProd as InveProdResource;
+use App\Models\Document;
 
 class InveUbicacionController extends Controller
 {
@@ -25,8 +29,7 @@ class InveUbicacionController extends Controller
             'warehouseId.required'              => 'warehouseId es Requerido',
             'location.required'                 => 'location es Requerido',
             'product.required'                  => 'product es Requerido',
-            'idsDetailsRequisitions.required'   => 'idsDetailsRequisitions es Requerido'
-
+            'idsDetailsRequisitions.required'   => 'idsDetailsRequisitions es Requerido',
         ];
 
         $validator = Validator::make($request->all(), [
@@ -35,7 +38,8 @@ class InveUbicacionController extends Controller
             'location'                  => 'required',
             'dispatchLogId'             => 'required',
             'warehouseId'               => 'required',
-            'idsDetailsRequisitions'    => 'required'
+            'idsDetailsRequisitions'    => 'required',
+            'headMoviId'                => 'nullable',
         ],$messageValidator);
 
         if ($validator->fails()) {
@@ -51,17 +55,17 @@ class InveUbicacionController extends Controller
         $dispatchLogId          = $request->input('dispatchLogId');
         $warehouseId            = $request->input('warehouseId');
         $idsDetailsRequisitions = $request->input('idsDetailsRequisitions');
+        $headMoviId             = $request->input('headMoviId');
         $user                   = (object) $request->get('userAuth');
 
         $response = [
             'message'   => '',
-            'status'    => 200,
+            'status'    => 400,
         ];
 
         $foundLocation = UbicacionBandeja::IsActive()->where('Barras', $location)->first();
         if ($foundLocation == null) {
             $response['message'] = "No se encontro la posicion $location";
-            $response['status'] = 400;
             return response()->json($response, 400);
         }
         $parseFoundLocation = (object) $foundLocation->toArray();
@@ -70,16 +74,29 @@ class InveUbicacionController extends Controller
 
         if ($foundProductOnLocation == null) {
             $response['message'] = "No se encontro el producto $productId en la  posicion $location";
-            $response['status'] = 400;
             return response()->json($response, 400);
         }
         $parseFoundProductOnLocation = (object) $foundProductOnLocation->toArray();
-        if (round($parseFoundProductOnLocation->currentInventory) < $qty) {
-            $roundedQty = round($parseFoundProductOnLocation->currentInventory);
+        $qtyInventoryOnLocation = floatval($parseFoundProductOnLocation->currentInventory) ?? 0;
+        if ($qtyInventoryOnLocation < $qty) {
+            $roundedQty = $qtyInventoryOnLocation;
             $response['message'] = "La cantidad en la ubicación es menor. Cantidad Actual: {$roundedQty}";
-            $response['status'] = 400;
             return response()->json($response, 400);
         }
+
+        $inventoryonInveProd = InveProd::InventoryWarehouse($productId,$warehouseId)->first();
+
+        $qtyInventoryOnInveProd= floatval($inventoryonInveProd->invenactua) ?? 0;
+        if($qtyInventoryOnInveProd< $qty){
+            $qtyOnInventory = floatval($inventoryonInveProd->invenactua);
+            $response['message'] = "La cantidad en el invetario(inveprod) es menor. Cantidad Actual: {$qtyOnInventory}";
+            return response()->json($response, 400);
+
+        }
+
+        /* FIND IF EXIST DOCUMENT DC */
+
+
 
         DB::beginTransaction();
         try {
@@ -87,6 +104,50 @@ class InveUbicacionController extends Controller
                 'message' => 'success',
                 'status' => 200
             ];
+
+            // START PICKING
+            $consecutiveMovimi = null;
+            if(!$headMoviId){
+                $documentDispatchCustomer ='DC';
+                $documentDC =  Document::where('documentoid',$documentDispatchCustomer)->first();
+                if($documentDC->count() == 0){
+                    $response['message'] = "No existe el documento DC (Despacho Cliente), crear el documento para continuar con el picking";
+                    return response()->json($response, 400);
+                }
+                $currentConsecutive = $documentDC->consenumer ?? 0;
+                $newConsecutiveDocumentDC = $currentConsecutive+1;
+                $documentDC->update(['consenumer'=>$newConsecutiveDocumentDC]);
+                $consecutiveMovimi = $this->buildConsecutiveDocument($newConsecutiveDocumentDC,$documentDispatchCustomer,$warehouseId);
+                $idHeadMovi =HeadMovi::create([
+                    'consemovim'    => $consecutiveMovimi,
+                    'numero'        => $newConsecutiveDocumentDC,
+                    'documentoid'   => $documentDispatchCustomer,
+                    'fecha'         => date('Y-m-d'), #now()
+                    'almacenid'     => $warehouseId,
+                    'fechadigit'    => now()
+
+                ])->movimientoid;
+
+                DespachoLog::where('Estado', 'A')
+                ->whereIn('Id',$dispatchLogId)
+                ->whereNull('AlistamientoInicio')
+                ->update([
+                    'AlistamientoInicio'    => now(),
+                    'HeadMoviId'            => $idHeadMovi
+                ]);
+
+                $headMoviId=$idHeadMovi;
+            }else{
+                $consecutiveMovimi = HeadMovi::where('movimientoid',$headMoviId)->consemovim;
+                if(!$consecutiveMovimi){
+                    DB::rollback();
+                    $response['message'] = 'No se logro obtener el consecutivo del consemovim';
+                    $response['status'] = 400;
+                    return response()->json($response, $response['status']);
+                }
+            }
+
+
 
 
             /* UPDATE QTY INVENTORY ON LOCATION */
@@ -98,7 +159,10 @@ class InveUbicacionController extends Controller
                 $foundProductOnLocation->save();
             }
 
-
+            /*UPDATE QTY INVENTORY ON INVEPROD */
+            $newQtyInventoryInveprod =($inventoryonInveProd->invenactua - $qty);
+            $inventoryonInveProd->invenactua =$newQtyInventoryInveprod;
+            $inventoryonInveProd->save();
 
             $resultGroup = $this->getDispatchToGroupRequisitions($idsDetailsRequisitions,$dispatchLogId,$qty);
 
@@ -113,25 +177,21 @@ class InveUbicacionController extends Controller
             $itemsVerifyDispatchLog = $resultGroup['data'];
 
             foreach ($itemsVerifyDispatchLog as $key => $item) {
-                /* START DISPATCH */
-                $isDispathWithoutStart = DespachoLog::where([
-                    ['Estado', '=', 'A'],
-                    ['Id', '=', $item["dispatchLogId"]],
+                $idMovimi= Movimi::create([
+                    'movimientoid'  => $headMoviId,
+                    'consemovim'    => $consecutiveMovimi,
+                    'productoid'    => $productId,
+                    'cantidad'      => $item["qty"],
 
-                ])->whereNull('AlistamientoInicio')->first();
-                if ($isDispathWithoutStart != null) {
-                    $isDispathWithoutStart->AlistamientoInicio = now();
-                    $isDispathWithoutStart->save();
-                }
-
-
+                ])->id;
                 VerificaDespachoLog::create([
                     'DespachoLogId'         => $item["dispatchLogId"],
                     'ProductoId'            => $productId,
                     'Cantidad'              => $item["qty"],
                     'Fecha'                 => date('Y-m-d'),
                     'Tipo'                  => 'A',
-                    'RequisicionDetalleId'  => $item["detailIdRequisition"]
+                    'RequisicionDetalleId'  => $item["detailIdRequisition"],
+                    'MovimiId'              => $idMovimi
 
                 ]);
 
@@ -243,4 +303,13 @@ class InveUbicacionController extends Controller
             ];
         }
     }
+
+    private function buildConsecutiveDocument(int $conse, string $document, string $almacen) {
+		$cantFaltante = 19 - (strlen($conse) + strlen($document) + strlen(trim($almacen)));
+		$ceros = '';
+		for ($i=0; $i < $cantFaltante; $i++) {
+			$ceros .= '0';
+		}
+		return $document . $ceros . trim($almacen) . "-" . $conse;
+	}
 }
