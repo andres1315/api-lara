@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Priority;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -48,17 +49,20 @@ class HeadRequ extends Model
   }
 
 
-  public function scopeApprovedAndAssigned(Builder $query,$user_id,$warehouseId)
+  public function scopeApprovedAndAssigned(Builder $query,$user_id)
   {
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
-    ->where('HeadRequ.BodegaId',$warehouseId)
-   ->where('HeadRequ.Estado', '!=', 'NU')
+    ->join('Operario',function($join){
+        $join->on('DespachoLog.OperarioIdAli','=','Operario.Operarioid')
+        ->whereColumn('HeadRequ.BodegaId','=','Operario.AlmacenId');
+    })
+    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
-   ->whereNull('DespachoLog.GrupoRq')
-   ->select('HeadRequ.*')
+   ->whereNull('DespachoLog.GrupoRQ')
+   ->select('HeadRequ.*','DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -72,7 +76,7 @@ class HeadRequ extends Model
 
   public function scopeWithRelations(Builder $query)
   {
-    $relations = ['userRequest', /* 'warehouse', 'dependency' */];
+    $relations = ['warehouse'];
     static::$relationsToInclude = array_merge( static::$relationsToInclude,$relations);
     return $query->with($relations);
   }
@@ -109,19 +113,36 @@ class HeadRequ extends Model
 
   }
 
-  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id,$warehouseId)
+  public function scopeApprovedAndAssignedGroup(Builder $query,$user_id)
   {
    return $query->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
-   ->where('HeadRequ.BodegaId',$warehouseId)
+   ->join('Operario',function($join){
+        $join->on('DespachoLog.OperarioIdAli','=','Operario.Operarioid')
+        ->whereColumn('HeadRequ.BodegaId','=','Operario.AlmacenId');
+    })
    ->where('HeadRequ.Estado', '!=', 'NU')
    ->where('HeadRequ.Aprobada','S')
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
-   ->whereNotNull('DespachoLog.GrupoRq')
-   ->select('HeadRequ.*', 'DespachoLog.GrupoRq')
+   ->whereNotNull('DespachoLog.GrupoRQ')
+   ->select('HeadRequ.*', 'DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
+
+  public function scopeRequisitionDetailById(Builder $query, array $idsDetailRequisition)
+  {
+   return $query->join('Requisicion','Requisicion.RequisicionId','=','HeadRequ.RequisicionId')
+   ->join('DespachoLog','DespachoLog.RequisicionId','=','HeadRequ.RequisicionId')
+   ->where('HeadRequ.Estado', '!=', 'NU')
+   ->where('HeadRequ.Aprobada','S')
+   ->where('Requisicion.NoPendiente',0)
+   ->whereIn('Requisicion.id',$idsDetailRequisition)
+   ->whereNotNull('DespachoLog.GrupoRQ')
+   ->select('Requisicion.id as detailRequisitionId','Requisicion.RequisicionId','Requisicion.Aprobados as approved','Requisicion.ProductoId','Requisicion.Factor','Requisicion.PresentacionId','DespachoLog.Id as dispatchLogId')
+   ->orderBy('HeadRequ.Prioridad', 'asc');
+  }
+
 
 
 
@@ -129,11 +150,7 @@ class HeadRequ extends Model
   {
     $array = parent::toArray();
 
-    $priorityName = [
-      1 => 'Urgente',
-      2 => 'Medio',
-      3 => 'Normal',
-    ];
+
 
     $serializeData = [
       'id'                  => [$array['RequisicionId']],
@@ -142,8 +159,10 @@ class HeadRequ extends Model
       'warehouseId'         => $array['BodegaId'],
       'approvalDate'        => $array['FechaAprobacion'],
       'approved'            => $array['Aprobada'],
-      'priority'            => ['id' => (int) $array['Prioridad'], 'text' => $priorityName[$array['Prioridad']]],  // 3->normal, 2->medio, 1->urgente
-      'groupRQ'             =>  $array['GrupoRq'] ?? null,
+      'priority'            => ['id' => (int) $array['Prioridad'], 'text' => Priority::from($array['Prioridad'])->name],  // 3->normal, 2->medio, 1->urgente
+      'groupRQ'             => $array['GrupoRQ'] ?? null,
+      'headMoviId'          => $array['IdHeadMovi'] ?? null,
+      'basketCode'          => ( $array['CodigoCanasta']?? false) ? [$array['CodigoCanasta']] : null,
     ];
 
 

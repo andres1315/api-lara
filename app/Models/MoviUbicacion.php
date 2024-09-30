@@ -16,7 +16,7 @@ class MoviUbicacion extends Model
 
 
 
-    protected $fillable = ['Fecha', 'TipoMovimiento', 'BandejaId','ProductoId','Cantidad','TipoOrigen','NumeroOrigen','FechaRegistro','UsuarioId','AlmacenId'];
+    protected $fillable = ['Fecha', 'TipoMovimiento', 'BandejaId','ProductoId','Cantidad','TipoOrigen','NumeroOrigen','FechaRegistro','UsuarioId','AlmacenId','OperarioId'];
 
 
 
