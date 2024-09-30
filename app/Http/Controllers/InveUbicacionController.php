@@ -133,12 +133,13 @@ class InveUbicacionController extends Controller
                 ->whereNull('AlistamientoInicio')
                 ->update([
                     'AlistamientoInicio'    => now(),
-                    'HeadMoviId'            => $idHeadMovi
+                    'IdHeadMovi'            => $idHeadMovi
                 ]);
 
                 $headMoviId=$idHeadMovi;
             }else{
-                $consecutiveMovimi = HeadMovi::where('movimientoid',$headMoviId)->consemovim;
+                $consecutiveMovimi = HeadMovi::where('movimientoid',$headMoviId)->first()->consemovim;
+
                 if(!$consecutiveMovimi){
                     DB::rollback();
                     $response['message'] = 'No se logro obtener el consecutivo del consemovim';
@@ -191,7 +192,7 @@ class InveUbicacionController extends Controller
                     'Fecha'                 => date('Y-m-d'),
                     'Tipo'                  => 'A',
                     'RequisicionDetalleId'  => $item["detailIdRequisition"],
-                    'MovimiId'              => $idMovimi
+                    'IdMovimi'              => $idMovimi
 
                 ]);
 

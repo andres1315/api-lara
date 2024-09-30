@@ -61,8 +61,8 @@ class HeadRequ extends Model
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
-   ->whereNull('DespachoLog.GrupoRq')
-   ->select('HeadRequ.*')
+   ->whereNull('DespachoLog.GrupoRQ')
+   ->select('HeadRequ.*','DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -125,8 +125,8 @@ class HeadRequ extends Model
    ->where('DespachoLog.OperarioIdAli',$user_id)
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
-   ->whereNotNull('DespachoLog.GrupoRq')
-   ->select('HeadRequ.*', 'DespachoLog.GrupoRq')
+   ->whereNotNull('DespachoLog.GrupoRQ')
+   ->select('HeadRequ.*', 'DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -138,7 +138,7 @@ class HeadRequ extends Model
    ->where('HeadRequ.Aprobada','S')
    ->where('Requisicion.NoPendiente',0)
    ->whereIn('Requisicion.id',$idsDetailRequisition)
-   ->whereNotNull('DespachoLog.GrupoRq')
+   ->whereNotNull('DespachoLog.GrupoRQ')
    ->select('Requisicion.id as detailRequisitionId','Requisicion.RequisicionId','Requisicion.Aprobados as approved','Requisicion.ProductoId','Requisicion.Factor','Requisicion.PresentacionId','DespachoLog.Id as dispatchLogId')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
@@ -160,7 +160,8 @@ class HeadRequ extends Model
       'approvalDate'        => $array['FechaAprobacion'],
       'approved'            => $array['Aprobada'],
       'priority'            => ['id' => (int) $array['Prioridad'], 'text' => Priority::from($array['Prioridad'])->name],  // 3->normal, 2->medio, 1->urgente
-      'groupRQ'             =>  $array['GrupoRq'] ?? null,
+      'groupRQ'             => $array['GrupoRQ'] ?? null,
+      'headMoviId'          => $array['IdHeadMovi'] ?? null,
       'basketCode'          => ( $array['CodigoCanasta']?? false) ? [$array['CodigoCanasta']] : null,
     ];
 

@@ -14,7 +14,7 @@ class DespachoLog extends Model
     protected $primaryKey = 'Id';
     public $timestamps = false;
 
-
+    protected $fillable = ['Estado', 'AlistamientoInicio', 'AlistamientoFin','IdHeadMovi','GrupoRQ','CodigoCanasta'];
 
     public function scopeAssignedEnlistment(Builder $query, $user_id)
     {
@@ -48,6 +48,9 @@ class DespachoLog extends Model
       'observation'             => $array['Observacion'],
       'requisitionId'           => $array['RequisicionId'],
       'priority'                => $array['Prioridad'],
+      'groupRq'                 => $array['GrupoRQ'],
+      'basketCode'              => $array['CodigoCanasta'],
+      'headMoviId'              => $array['IdHeadMovi'],
       'verifyDispatchLog'       => $this->verifyDispatchLog
 
     ];

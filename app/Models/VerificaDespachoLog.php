@@ -10,7 +10,7 @@ class VerificaDespachoLog extends Model
     use HasFactory;
     protected $table = 'VerificaDespachoLog';
     protected $primaryKey = 'Id';
-    protected $fillable = ['DespachoLogId', 'ProductoId', 'Cantidad','Fecha','LoteProductoId','PresentacionId','Factor','RequisicionDetalleId','Tipo','MovimiId'];
+    protected $fillable = ['DespachoLogId', 'ProductoId', 'Cantidad','Fecha','LoteProductoId','PresentacionId','Factor','RequisicionDetalleId','Tipo','IdMovimi'];
     public $timestamps = false;
 
 

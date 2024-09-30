@@ -74,12 +74,8 @@ class RequisicionController extends Controller
             'status' => 200
         ];
         try {
-            DespachoLog::whereIn('Id',$ids)->update(['AlistamientoFin'=> now()]);
-            /* dd($dispatchLog);
-            if ($dispatchLog->Id) {
-                $dispatchLog->AlistamientoFin = now();
-                $dispatchLog->save();
-            } */
+            $statePacking='E';
+            DespachoLog::whereIn('Id',$ids)->update(['AlistamientoFin'=> now(),'Estado'=>$statePacking]);
             DB::commit();
             return response()->json($response, $response['status']);
 
@@ -138,7 +134,7 @@ class RequisicionController extends Controller
         try {
 
             foreach ($dispatchLog as $key => $dispatch) {
-                $dispatch->GrupoRq = $ids_requisitions[0];
+                $dispatch->GrupoRQ = $ids_requisitions[0];
                 $dispatch->save();
             }
             DB::commit();
@@ -210,7 +206,8 @@ class RequisicionController extends Controller
         $groupRequ->approvalDate = $requisition->first()->FechaAprobacion;
         $groupRequ->approved = $requisition->first()->Aprobada;
         $groupRequ->priority = $requisition->first()->Prioridad;
-        $groupRequ->groupRQ = $requisition->first()->GrupoRq;
+        $groupRequ->groupRQ = $requisition->first()->GrupoRQ;
+        $groupRequ->headMoviId = $requisition->first()->IdHeadMovi;
         $groupRequ->basketCode = [];
 
         $requisition->each(function ($headRequ) use ($groupRequ) {
