@@ -118,11 +118,6 @@ class RequisicionController extends Controller
             if ($requisitionFreeToGroup->count() == 0) return response()->json($response, 400);
             $idsRequisitionsFreeToGroup  =array_merge(...array_column($requisitionFreeToGroup->toArray(),'id'));
             $idsRequisitionsNoFreeToGroup  = array_diff($ids_requisitions,$idsRequisitionsFreeToGroup);
-
-
-
-
-
             $response['message'] = "Las requisiciones " . implode(',', $idsRequisitionsNoFreeToGroup) . " no pueden agregarse a un grupo, ya han sido iniciados o pertenecen a otro grupo";
             return response()->json($response, 400);
 
@@ -208,13 +203,12 @@ class RequisicionController extends Controller
         $groupRequ->priority = $requisition->first()->Prioridad;
         $groupRequ->groupRQ = $requisition->first()->GrupoRQ;
         $groupRequ->headMoviId = $requisition->first()->IdHeadMovi;
-        $groupRequ->basketCode = [];
+        $groupRequ->basketCode = $requisition->first()->CodigoCanasta;
 
         $requisition->each(function ($headRequ) use ($groupRequ) {
             $groupRequ->id[] = $headRequ['RequisicionId'];
             $groupRequ->consecutive[] = $headRequ['ConseRequi'];
             $groupRequ->dispatchLog[] = $headRequ['dispatchLog'];
-            $headRequ['CodigoCanasta'] && ($groupRequ->basketCode[] = $headRequ['CodigoCanasta']);
         });
 
         $groupRequ->requDetail = $requisition->flatMap(function ($req) use ($user) {
@@ -243,5 +237,54 @@ class RequisicionController extends Controller
 
 
         return response()->json(['requisitionData' => $groupRequ]);
+    }
+
+    public function toAssignBasket(Request $request){
+        $messageValidator = [
+            'idsRequisition.required'   => 'idsRequisition es Requerido',
+            'idsRequisition.array'      => 'El campo "idsRequisition" debe ser un array.',
+            'idsRequisition.*.required' => 'Cada elemento de "idsRequisition" es obligatorio.',
+            'idsRequisition.*.integer'  => 'Cada elemento de "idsRequisition" debe ser un número entero.',
+            'basketCode'                => 'El codigo de canasta es requerido'
+
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'idsRequisition'    => 'required|array',         // Debe ser un array
+            'idsRequisition.*'  => 'required|integer',     // Cada elemento debe ser un número entero
+            'basketCode'        => 'required'
+        ], $messageValidator);
+
+        if ($validator->fails()) {
+            $response['message'] = $validator->errors();
+            $response['success'] = false;
+            $response['status'] = 400;
+            $response['data'] = $request->all();
+            return response()->json($response, 400);
+        }
+
+        $idsRequisition = $validator->validated()['idsRequisition'];
+        $basketCode = $validator->validated()['basketCode'];
+
+        DB::beginTransaction();
+        try{
+            DespachoLog::whereIn('RequisicionId',$idsRequisition)->update([
+                'CodigoCanasta' => $basketCode
+            ]);
+            DB::commit();
+            $response=[
+                'success'   => true,
+                'message'   => '',
+            ];
+            return response()->json($response,200);
+        }catch(Throwable $th){
+            DB::rollback();
+            $response = [
+                "success" => false,
+                "message" => $th->getMessage(),
+            ];
+            return response()->json($response, 400);
+        }
+
     }
 }

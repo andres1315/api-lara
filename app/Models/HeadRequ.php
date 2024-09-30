@@ -62,7 +62,7 @@ class HeadRequ extends Model
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
    ->whereNull('DespachoLog.GrupoRQ')
-   ->select('HeadRequ.*','DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi')
+   ->select('HeadRequ.*','DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi','DespachoLog.CodigoCanasta')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -126,7 +126,7 @@ class HeadRequ extends Model
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
    ->whereNotNull('DespachoLog.GrupoRQ')
-   ->select('HeadRequ.*', 'DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi')
+   ->select('HeadRequ.*', 'DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi','DespachoLog.CodigoCanasta')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -162,7 +162,7 @@ class HeadRequ extends Model
       'priority'            => ['id' => (int) $array['Prioridad'], 'text' => Priority::from($array['Prioridad'])->name],  // 3->normal, 2->medio, 1->urgente
       'groupRQ'             => $array['GrupoRQ'] ?? null,
       'headMoviId'          => $array['IdHeadMovi'] ?? null,
-      'basketCode'          => ( $array['CodigoCanasta']?? false) ? [$array['CodigoCanasta']] : null,
+      'basketCode'          => $array['CodigoCanasta'] ?? null,
     ];
 
 

@@ -10,6 +10,7 @@ use App\Models\DespachoNovedad;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class DespachoLogNovedadController extends Controller
@@ -64,21 +65,43 @@ class DespachoLogNovedadController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request)
     {
-       $newsDispatch= new DespachoNovedadCollection(
+
+        $messageValidator = [
+            'id.required' => 'id es Requerido',
+            'id.array' => 'El campo "id" debe ser un array.',
+            'id.*.required' => 'Cada elemento de "id" es obligatorio.',
+            'id.*.integer' => 'Cada elemento de "id" debe ser un número entero.',
+
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|array',         // Debe ser un array
+            'id.*' => 'required|integer',     // Cada elemento debe ser un número entero
+        ], $messageValidator);
+
+        if ($validator->fails()) {
+            $response['message'] = $validator->errors();
+            $response['success'] = false;
+            $response['status'] = 400;
+            return response()->json($response, 400);
+        }
+
+        $dispatchLogIds = $validator->validated()['id'];
+       $newsDispatchs= new DespachoNovedadCollection(
             DespachoNovedad::ActiveAndFilterType('AL')
-            ->withDetailDispatch($id)
-            ->where('DespachoLogNovedad.DespachoLogId', $id)
+            ->withDetailDispatch($dispatchLogIds)
+            ->whereIn('DespachoLogNovedad.DespachoLogId', $dispatchLogIds)
             ->get()
         );
 
-        $allHeadNewsDispatch =new DespachoNovedadCollection(
+        $typesNewsDispatch =new DespachoNovedadCollection(
             DespachoNovedad::where('Estado', 'A')->get()
         );
 
 
-        return response()->json(['newsDispatch' => $newsDispatch, 'headDispatch' =>$allHeadNewsDispatch]);
+        return response()->json(['newsDispatch' => $newsDispatchs, 'headDispatch' =>$typesNewsDispatch]);
 
     }
 
