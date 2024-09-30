@@ -32,18 +32,8 @@ class DespachoNovedad extends Model
 
     public function scopeWithDetailDispatch(Builder $query,$dispatchLogId): Builder{
         return $query->with(['detailNewsDispatch'=> function($query) use($dispatchLogId){
-            $query->where('DespachoLogId','=', $dispatchLogId);
+            $query->whereIn('DespachoLogId', $dispatchLogId);
         }]);
     }
-/*
-    public function toArray(){
-        $array = parent::toArray();
 
-        $serializeData = [
-            'id'        => $array['NovedadId'],
-            'name'      => $array['Nombre'],
-            'state'     => $array['Estado'],
-        ];
-        return $serializeData;
-    } */
 }
