@@ -44,8 +44,8 @@ class SetClientDatabase
             ->where('C.Nit', $nit)
             ->where('C.Estado', 'A')
             ->where('A.Estado', 'A')
-            ->where('M.ModuloId', env('APP_DB_NAME', 'WEBCLUB'))
-            ->where('A.AplicativoId', env('APP_DB_NAME', 'WEBCLUB'))
+            ->where('M.ModuloId', env('APP_DB_NAME', 'DESPACHO_FIVE'))
+            ->where('A.AplicativoId', env('APP_DB_NAME', 'DESPACHO_FIVE'))
             ->where('AC.Estado', 'A')
             ->first();
 
