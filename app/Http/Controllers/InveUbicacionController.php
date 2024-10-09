@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Throwable;
 use App\Http\Resources\InveProd as InveProdResource;
 use App\Models\Document;
+use App\Models\Producto;
 
 class InveUbicacionController extends Controller
 {
@@ -93,7 +94,7 @@ class InveUbicacionController extends Controller
             return response()->json($response, 400);
 
         }
-
+        $costProduct = Producto::where('productoid',$productId)->first()->costoprome ?? 0;
         /* FIND IF EXIST DOCUMENT DC */
 
 
@@ -178,11 +179,17 @@ class InveUbicacionController extends Controller
             $itemsVerifyDispatchLog = $resultGroup['data'];
 
             foreach ($itemsVerifyDispatchLog as $key => $item) {
+                
                 $idMovimi= Movimi::create([
                     'movimientoid'  => $headMoviId,
                     'consemovim'    => $consecutiveMovimi,
                     'productoid'    => $productId,
                     'cantidad'      => $item["qty"],
+                    'costo'         => $costProduct,
+                    'costodescu'    => $costProduct,
+                    'costoreal'     => $costProduct,
+                    'costototal'    => ($costProduct*$item["qty"]),
+                    'costoorigi'    => ($costProduct*$item["qty"]),
 
                 ])->id;
                 VerificaDespachoLog::create([
