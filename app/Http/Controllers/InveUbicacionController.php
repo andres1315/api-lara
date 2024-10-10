@@ -50,7 +50,7 @@ class InveUbicacionController extends Controller
             return  response()->json($response, 400);
         }
 
-        $productId              = $request->input('product');
+        $productIdSearch              = $request->input('product');
         $qty                    = $request->input('qty');
         $location               = $request->input('location');
         $dispatchLogId          = $request->input('dispatchLogId');
@@ -63,6 +63,18 @@ class InveUbicacionController extends Controller
             'message'   => '',
             'status'    => 400,
         ];
+
+        $productDetail = Producto::where('productoid',$productIdSearch)
+        ->orWhere('barras', $productIdSearch)
+        ->orWhere('barras2', $productIdSearch)
+        ->orWhere('barras3', $productIdSearch)->first();
+        if(!$productDetail?->productoid){
+            $response['message'] = "No se encontro el producto $productIdSearch";
+            return response()->json($response, 400);
+        }
+        $productId=$productDetail->productoid;
+        $costProduct = $productDetail->costoprome ?? 0;
+        $ivaId = $productDetail->ivaid ?? 0;
 
         $foundLocation = UbicacionBandeja::IsActive()->where('Barras', $location)->first();
         if ($foundLocation == null) {
@@ -94,7 +106,7 @@ class InveUbicacionController extends Controller
             return response()->json($response, 400);
 
         }
-        $costProduct = Producto::where('productoid',$productId)->first()->costoprome ?? 0;
+
         /* FIND IF EXIST DOCUMENT DC */
 
 
@@ -179,7 +191,7 @@ class InveUbicacionController extends Controller
             $itemsVerifyDispatchLog = $resultGroup['data'];
 
             foreach ($itemsVerifyDispatchLog as $key => $item) {
-                
+                $totalCost =  ($costProduct*$item["qty"]);
                 $idMovimi= Movimi::create([
                     'movimientoid'  => $headMoviId,
                     'consemovim'    => $consecutiveMovimi,
@@ -188,8 +200,10 @@ class InveUbicacionController extends Controller
                     'costo'         => $costProduct,
                     'costodescu'    => $costProduct,
                     'costoreal'     => $costProduct,
-                    'costototal'    => ($costProduct*$item["qty"]),
-                    'costoorigi'    => ($costProduct*$item["qty"]),
+                    'costototal'    => $totalCost,
+                    'costoorigi'    => $totalCost,
+                    'iva'           => ($totalCost*$ivaId)/100,
+                    'ivaid'         => $ivaId
 
                 ])->id;
                 VerificaDespachoLog::create([

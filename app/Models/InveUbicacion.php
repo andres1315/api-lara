@@ -62,6 +62,9 @@ class InveUbicacion extends Model
             ->where(function (Builder $query) use ($find) {
                 $query->orWhere('InveUbicacion.ProductoId', $find)
                     ->orWhere('UbicacionBandeja.Barras', $find)
+                    ->orWhere('vwProducto.barras', $find)
+                    ->orWhere('vwProducto.barras2', $find)
+                    ->orWhere('vwProducto.barras3', $find)
                     ->orWhere('vwProducto.referencia', $find);
             });
     }

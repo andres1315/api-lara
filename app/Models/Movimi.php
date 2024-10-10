@@ -12,5 +12,5 @@ class Movimi extends Model
     protected $table = 'Movimi';
     protected $primaryKey = 'id';
     public $timestamps = false;
-    protected $fillable = ['movimientoid','consemovim', 'productoid', 'cantidad','costo','costodescu','costoreal','costototal','costoorigi'];
+    protected $fillable = ['movimientoid','consemovim', 'productoid', 'cantidad','costo','costodescu','costoreal','costototal','costoorigi','iva','ivaid'];
 }
