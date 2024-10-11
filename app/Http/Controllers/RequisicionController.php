@@ -204,6 +204,7 @@ class RequisicionController extends Controller
         $groupRequ->groupRQ = $requisition->first()->GrupoRQ;
         $groupRequ->headMoviId = $requisition->first()->IdHeadMovi;
         $groupRequ->basketCode = $requisition->first()->CodigoCanasta;
+        $warehouseUser =  $requisition->first()->BodegaId;
 
         $requisition->each(function ($headRequ) use ($groupRequ) {
             $groupRequ->id[] = $headRequ['RequisicionId'];
@@ -211,9 +212,9 @@ class RequisicionController extends Controller
             $groupRequ->dispatchLog[] = $headRequ['dispatchLog'];
         });
 
-        $groupRequ->requDetail = $requisition->flatMap(function ($req) use ($user) {
+        $groupRequ->requDetail = $requisition->flatMap(function ($req) use ($warehouseUser) {
             foreach ($req->requDetail as $requisitionDetail) {
-                $requisitionDetail->withSuggestedLocationProducts($user->warehouseId);
+                $requisitionDetail->withSuggestedLocationProducts($warehouseUser);
             }
             return $req->requDetail;
         })->groupBy(function ($item) {
