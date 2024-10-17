@@ -236,7 +236,18 @@ class InveUbicacionController extends Controller
                     'costoajust'    => 0,
                     'Factor'        => 0,
                     'CostoOtros'    => 0,
-                    'CostoOrden'    => 0
+                    'CostoOrden'    => 0,
+                    'porcedesc1'    => 0,
+                    'porcedesc2'    => 0,
+                    'porcedesc3'    => 0,
+                    'descuprod1'    => 0,
+                    'descuprod2'    => 0,
+                    'descuprod3'    => 0,
+                    'descuprodu'    => 0,
+                    'porcedescu'    => 0,
+                    'IvaAlCosto'    => 0,
+                    'DescuFinaP'    => 0,
+                    'BandejaId'     => $parseFoundLocation->id
 
                 ])->id;
                 VerificaDespachoLog::create([
