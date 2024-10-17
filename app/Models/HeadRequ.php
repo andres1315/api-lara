@@ -62,7 +62,7 @@ class HeadRequ extends Model
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
    ->whereNull('DespachoLog.GrupoRQ')
-   ->select('HeadRequ.*','DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi','DespachoLog.CodigoCanasta')
+   ->select('HeadRequ.*','DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi','DespachoLog.CodigoCanasta','DespachoLog.Prioridad AS PriorityDispatch')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -126,7 +126,7 @@ class HeadRequ extends Model
    ->where('DespachoLog.Estado','A')
    ->whereNull('DespachoLog.Alistamientofin')
    ->whereNotNull('DespachoLog.GrupoRQ')
-   ->select('HeadRequ.*', 'DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi','DespachoLog.CodigoCanasta')
+   ->select('HeadRequ.*', 'DespachoLog.GrupoRQ','DespachoLog.IdHeadMovi','DespachoLog.CodigoCanasta','DespachoLog.Prioridad AS PriorityDispatch')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -139,7 +139,7 @@ class HeadRequ extends Model
    ->where('Requisicion.NoPendiente',0)
    ->whereIn('Requisicion.id',$idsDetailRequisition)
    ->whereNotNull('DespachoLog.GrupoRQ')
-   ->select('Requisicion.id as detailRequisitionId','Requisicion.RequisicionId','Requisicion.Aprobados as approved','Requisicion.ProductoId','Requisicion.Factor','Requisicion.PresentacionId','DespachoLog.Id as dispatchLogId')
+   ->select('Requisicion.id as detailRequisitionId','Requisicion.RequisicionId','Requisicion.Aprobados as approved','Requisicion.ProductoId','Requisicion.Factor','Requisicion.PresentacionId','DespachoLog.Id as dispatchLogId','DespachoLog.Prioridad AS PriorityDispatch')
    ->orderBy('HeadRequ.Prioridad', 'asc');
   }
 
@@ -159,7 +159,7 @@ class HeadRequ extends Model
       'warehouseId'         => $array['BodegaId'],
       'approvalDate'        => $array['FechaAprobacion'],
       'approved'            => $array['Aprobada'],
-      'priority'            => ['id' => (int) $array['Prioridad'], 'text' => Priority::from($array['Prioridad'])->name],  // 3->normal, 2->medio, 1->urgente
+      'priority'            => ['id' => (int) $array['PriorityDispatch'], 'text' => Priority::from($array['PriorityDispatch'])->name],  // 3->normal, 2->medio, 1->urgente
       'groupRQ'             => $array['GrupoRQ'] ?? null,
       'headMoviId'          => $array['IdHeadMovi'] ?? null,
       'basketCode'          => $array['CodigoCanasta'] ?? null,

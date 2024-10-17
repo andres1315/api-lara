@@ -12,5 +12,5 @@ class HeadMovi extends Model
     protected $primaryKey = 'movimientoid';
     public $timestamps = false;
 
-    protected $fillable = ['numero', 'documentoid', 'fecha','almacenid','usuarioid','consemovim','fechadigit'];
+    protected $fillable = ['numero', 'documentoid', 'fecha','almacenid','usuarioid','consemovim','fechadigit','fechavence','terceroid','FechaConta'];
 }
