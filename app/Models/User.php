@@ -66,11 +66,13 @@ class User extends Authenticatable implements JWTSubject
 
   public function getJWTCustomClaims()
   {
+    $company = Empresa::select('nombre','nit','digitverif')->first();
     return [
       'operarioid'  => $this->OperarioId,
       'warehouseId' => $this->AlmacenId,
       'document'    => $this->TerceroId,
       'name'        => $this->thirdData->nombre,
+      'companyNit'  => $company?->nit,
 
       // Agregar aquí otros datos que se quieran incluir en el token
     ];

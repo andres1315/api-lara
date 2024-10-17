@@ -140,6 +140,27 @@ class InveUbicacionController extends Controller
                     'fechadigit'    => now(),
                     'fechavence'    => date('Y-m-d'),
                     'FechaConta'    => date('Y-m-d'),
+                    'terceroid'     => $user->companyNit,
+                    'fletes'        => 0,
+                    'ivafletes'     => 0,
+                    'retencion'     => 0,
+                    'porcereten'    => 0,
+                    'reteniva'      => 0,
+                    'retenica'      => 0,
+                    'ajustpeso'     => 0,
+                    'ajustiva'      => 0,
+                    'descuento'     => 0,
+                    'descufinan'    => 0,
+                    'seguro'        => 0,
+                    'ivaseguro'     => 0,
+                    'PorcentajeAIUBase'     => 0,
+                    'AIUBase'               => 0,
+                    'PorcentajeUtilidad'    => 0,
+                    'Utilidad'              => 0,
+                    'IvaIdAIU'              => 0,
+                    'IvaAIU'                => 0,
+                    'SinImpuRete'           => 0,
+                    'Especial'              => 'DW',
 
                 ])->movimientoid;
 
@@ -205,7 +226,17 @@ class InveUbicacionController extends Controller
                     'costototal'    => $totalCost,
                     'costoorigi'    => $totalCost,
                     'iva'           => 0,
-                    'ivaid'         => 0
+                    'ivaid'         => 0,
+                    'conseprodu'    => 0,
+                    'cantifracc'    => 0,
+                    'cantigramo'    => 0,
+                    'costofracc'    => 0,
+                    'costoexent'    => 0,
+                    'costototex'    => 0,
+                    'costoajust'    => 0,
+                    'Factor'        => 0,
+                    'CostoOtros'    => 0,
+                    'CostoOrden'    => 0
 
                 ])->id;
                 VerificaDespachoLog::create([
