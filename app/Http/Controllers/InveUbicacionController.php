@@ -137,7 +137,9 @@ class InveUbicacionController extends Controller
                     'documentoid'   => $documentDispatchCustomer,
                     'fecha'         => date('Y-m-d'), #now()
                     'almacenid'     => $warehouseId,
-                    'fechadigit'    => now()
+                    'fechadigit'    => now(),
+                    'fechavence'    => date('Y-m-d'),
+                    'FechaConta'    => date('Y-m-d'),
 
                 ])->movimientoid;
 
@@ -202,8 +204,8 @@ class InveUbicacionController extends Controller
                     'costoreal'     => $costProduct,
                     'costototal'    => $totalCost,
                     'costoorigi'    => $totalCost,
-                    'iva'           => ($totalCost*$ivaId)/100,
-                    'ivaid'         => $ivaId
+                    'iva'           => 0,
+                    'ivaid'         => 0
 
                 ])->id;
                 VerificaDespachoLog::create([
